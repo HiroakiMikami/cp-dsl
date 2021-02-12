@@ -2,3 +2,6 @@
 !*/
 !/LICENSE
 !/.gitignore
+!/benchmarks/CMakeLists.txt
+!/benchmarks/*.cc
+!/benchmarks/*.h
