@@ -2,6 +2,11 @@
 !*/
 !/LICENSE
 !/.gitignore
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+!/src/*.ts
+!/test/*.ts
 !/cc_tests/CMakeLists.txt
 !/cc_tests/*.cc
 !/cc_tests/*.h
