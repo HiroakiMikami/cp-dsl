@@ -39,7 +39,7 @@ describe("toString", () => {
                 new $.Identifier("x"), new $.TypeIdentifier("y")
             ).toString().should.deep.equal("$x:#y")
         })
-        it("Func",() => {
+        it("Func", () => {
             new $.Func(
                 [
                     new $.Declaration(
@@ -70,12 +70,12 @@ describe("toString", () => {
     })
 
     describe("Assign", () => {
-        it("define",() => {
+        it("define", () => {
             new $.Assign(
                 new $.Identifier("x"), true, new $.Identifier("y")
             ).toString().should.deep.equal("$x:=$y\n")
         })
-        it("assign",() => {
+        it("assign", () => {
             new $.Assign(
                 new $.Identifier("x"), false, new $.Identifier("y")
             ).toString().should.deep.equal("$x<-$y\n")
@@ -91,12 +91,12 @@ describe("toString", () => {
         ).toString().should.deep.equal("foreach($x<-$xs){\n  do($z)\n}\n")
     })
     describe("Branch", () => {
-        it("Case",() => {
+        it("Case", () => {
             new $.Case(
                 new $.Identifier("cond"), new $.Do(new $.Identifier("x"))
             ).toString().should.deep.equal("case($cond):\n  do($x)\n")
         })
-        it("Default",() => {
+        it("Default", () => {
             new $.Default(
                 new $.Do(new $.Identifier("x"))
             ).toString().should.deep.equal("default:\n  do($x)\n")
