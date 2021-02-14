@@ -2,7 +2,8 @@
   "name": "cp-dsl-evaluator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "out/src/index.js",
+  "types": "out/src/index.d.ts",
   "scripts": {
     "compile": "$(npm bin)/tsc -p ./",
     "doc": "$(npm bin)/typedoc --out doc ./src/",
