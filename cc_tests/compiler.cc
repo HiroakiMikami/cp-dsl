@@ -49,11 +49,14 @@ TEST(TemplateDeductionTest, TestForeach) {
 }
 
 TEST(TemplateDeductionTest, RecursiveFunctionTest) {
-    auto _fact = [&](int64_t n, auto fact) -> int64_t {
+    auto _fact = [&](int64_t n, auto _fact) -> int64_t {
+        auto fact = [&](int64_t n) -> int64_t {
+            return _fact(n, _fact);
+        };
         if (n == 1) {
             return 1;
         } else {
-            return n * fact(n - 1, fact);
+            return n * fact(n - 1);
         }
     };
     auto fact = [&](int64_t n) {
