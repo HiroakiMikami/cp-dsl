@@ -1,11 +1,4 @@
-function indent(x: Block): string {
-    let lines = x.toString()
-    if (lines.endsWith("\n")) {
-        lines = lines.substr(0, lines.length - 1)
-    }
-    return lines.split("\n").map(line => `  ${line}`).join("\n")
-}
-
+import { indent } from "./util"
 
 export interface Block {
     toString(): string
@@ -58,7 +51,9 @@ export class Func implements Block {
         public readonly body: Statement,
     ) { }
     toString(): string {
-        return `(${this.decls.join(",")})->${this.returnType}{\n${indent(this.body)}\n}`
+        return `(${this.decls.join(",")})->${this.returnType}{
+${indent(this.body.toString())}
+}`
     }
 }
 export class BinOp implements Block {
@@ -103,7 +98,10 @@ export class Loop implements Block {
         public readonly body: Statement,
     ) { }
     toString(): string {
-        return `foreach(${this.id}<-${this.iterable}){\n${indent(this.body)}\n}\n`
+        return `foreach(${this.id}<-${this.iterable}){
+${indent(this.body.toString())}
+}
+`
     }
 }
 export class Branch implements Block {
@@ -113,9 +111,13 @@ export class Branch implements Block {
     ) { }
     toString() {
         if (this._default) {
-            return `branch{\n${this.cases.join("")}${this._default}}\n`
+            return `branch{
+${this.cases.join("")}${this._default}}
+`
         } else {
-            return `branch{\n${this.cases.join("")}}\n`
+            return `branch{
+${this.cases.join("")}}
+`
         }
     }
 }
@@ -124,11 +126,17 @@ export class Case implements Block {
         public readonly cond: Expression,
         public readonly body: Statement,
     ) { }
-    toString() { return `case(${this.cond}):\n${indent(this.body)}\n` }
+    toString() { return `case(${this.cond}):
+${indent(this.body.toString())}
+` }
 }
 export class Default implements Block {
     constructor(public readonly body: Statement) { }
-    toString() { return `default:\n${indent(this.body)}\n` }
+    toString() {
+        return `default:
+${indent(this.body.toString())}
+`
+    }
 }
 export class Return implements Block {
     constructor(public readonly value: Expression | null) { }
