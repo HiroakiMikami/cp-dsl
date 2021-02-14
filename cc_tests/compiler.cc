@@ -41,9 +41,24 @@ TEST(TemplateDeductionTest, TestForeach) {
     _Iterator it{10};
     int64_t sum = 0;
     foreach(it, [&](auto i) {sum += i;});
-    EXPECT_EQ(55, sum);
+    EXPECT_EQ(45, sum);
     sum = 0;
     std::vector<int64_t> xs = {1, 2, 3};
     foreach(xs, [&](auto i) {sum += i;});
     EXPECT_EQ(6, sum);
+}
+
+TEST(TemplateDeductionTest, RecursiveFunctionTest) {
+    auto _fact = [&](int64_t n, auto fact) -> int64_t {
+        if (n == 1) {
+            return 1;
+        } else {
+            return n * fact(n - 1, fact);
+        }
+    };
+    auto fact = [&](int64_t n) {
+        return _fact(n, _fact);
+    };
+    EXPECT_EQ(int64_t(1), fact(1));
+    EXPECT_EQ(int64_t(6), fact(3));
 }

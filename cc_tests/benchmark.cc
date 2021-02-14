@@ -21,28 +21,28 @@ void foreach_with_lambda(_Iterator& x, F f) {
 }
 
 TEST(LoopTest, PerformanceTest) {
-    int64_t N = 100000;
+    int64_t N = 1000000;
     auto loop = measure([&]() {
         int64_t sum = 0;
         for (auto i = int64_t(0); i < N; i++) {
             sum += i * 2;
         }
-    }, 100);
+    }, 10);
     auto foreach_fn = measure([&]() {
         int64_t sum = 0;
         auto it = _Iterator{N, 0};
         foreach(it, [&](int64_t i) { sum += i * 2; });
-    }, 100);
+    }, 10);
     auto foreach_lambda = measure([&]() {
         int64_t sum = 0;
         auto it = _Iterator{N, 0};
         foreach_with_lambda(it, [&](int64_t i) { sum += i * 2; });
-    }, 100);
-    auto ref = double(loop.count()) / 100;
-    auto target = double(foreach_fn.count()) / 100;
-    auto target2 = double(foreach_lambda.count()) / 100;
+    }, 10);
+    auto ref = double(loop.count()) / 10;
+    auto target = double(foreach_fn.count()) / 10;
+    auto target2 = double(foreach_lambda.count()) / 10;
 
-    EXPECT_GT(target - ref, 1);
+    EXPECT_LT(target - ref, 30);
     EXPECT_LT(target2 - ref, 1);
 }
 
