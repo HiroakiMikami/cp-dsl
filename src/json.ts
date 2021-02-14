@@ -1,4 +1,4 @@
-import { Block, TypeIdentifier, PolymorphicType, TupleType, Num, Str, Identifier, Tuple, Declaration, Type, Func, Statement, BinOp, Expression, Call, Assign, Do, Loop, Branch, Default, Case, Return, Break, Continue, Suite } from "./syntax"
+import { Block, TypeIdentifier, PolymorphicType, Num, Str, Identifier, Declaration, Type, Func, Statement, BinOp, Expression, Call, Assign, Do, Loop, Branch, Default, Case, Return, Break, Continue, Suite } from "./syntax"
 
 export function fromJson(value: any): Block | null {
     if (!value) {
@@ -13,19 +13,13 @@ export function fromJson(value: any): Block | null {
                 fromJson(value["id"]) as TypeIdentifier,
                 value["typevars"].map(fromJson),
             )
-        case "TupleType":
-            return new TupleType(
-                value["types"].map(fromJson)
-            )
 
-        case "Num":
+            case "Num":
             return new Num(value["value"], value["isFloat"])
         case "Str":
             return new Str(value["value"])
         case "Identifier":
             return new Identifier(value["id"])
-        case "Tuple":
-            return new Tuple(value["elems"].map(fromJson))
         case "Declaration":
             return new Declaration(
                 fromJson(value["arg"]) as Identifier,
@@ -46,7 +40,7 @@ export function fromJson(value: any): Block | null {
         case "Call":
             return new Call(
                 fromJson(value["func"]) as Identifier,
-                fromJson(value["arg"]) as Expression,
+                value["args"].map(fromJson),
             )
 
         case "Assign":

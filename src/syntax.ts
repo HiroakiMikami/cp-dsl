@@ -22,11 +22,7 @@ export class PolymorphicType implements Block {
     ) { }
     toString(): string { return `${this.id}<${this.typevars.join(",")}>` }
 }
-export class TupleType implements Block {
-    constructor(public readonly types: ReadonlyArray<Type>) { }
-    toString(): string { return `#(${this.types.join(",")})` }
-}
-export type Type = TypeIdentifier | PolymorphicType | TupleType
+export type Type = TypeIdentifier | PolymorphicType
 
 export class Num implements Block {
     constructor(public readonly value: string, public readonly isFloat: boolean) { }
@@ -47,10 +43,6 @@ export type Primitive = Num | Str
 export class Identifier implements Block {
     constructor(public readonly id: string) { }
     toString(): string { return `$${this.id}` }
-}
-export class Tuple implements Block {
-    constructor(public readonly elems: ReadonlyArray<Expression>) { }
-    toString(): string { return `(${this.elems.join(",")})` }
 }
 export class Declaration implements Block {
     constructor(
@@ -80,11 +72,11 @@ export class BinOp implements Block {
 export class Call implements Block {
     constructor(
         public readonly func: Identifier,
-        public readonly arg: Expression,
+        public readonly args: ReadonlyArray<Expression>,
     ) { }
-    toString(): string { return `(${this.func}(${this.arg}))` }
+    toString(): string { return `(${this.func}(${this.args.join(",")}))` }
 }
-export type Expression = Primitive | Identifier | Tuple | Func | BinOp | Call
+export type Expression = Primitive | Identifier | Func | BinOp | Call
 
 export class Assign implements Block {
     constructor(

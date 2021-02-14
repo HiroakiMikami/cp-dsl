@@ -21,12 +21,6 @@ describe("fromJson", () => {
             [new $.TypeIdentifier("y")],
         ))
     })
-    it("TupleType", () => {
-        fromJson({
-            "_type": "TupleType",
-            "types": [{ "_type": "TypeIdentifier", "id": "y" }]
-        }).should.deep.equal(new $.TupleType([new $.TypeIdentifier("y")]))
-    })
 
     it("Num", () => {
         fromJson({ "_type": "Num", "value": "10", "isFloat": true }).should.deep.equal(new $.Num("10", true))
@@ -36,12 +30,6 @@ describe("fromJson", () => {
     })
     it("Identifier", () => {
         fromJson({ "_type": "Identifier", "id": "x" }).should.deep.equal(new $.Identifier("x"))
-    })
-    it("Tuple", () => {
-        fromJson({
-            "_type": "Tuple",
-            "elems": [{ "_type": "Identifier", "id": "y" }]
-        }).should.deep.equal(new $.Tuple([new $.Identifier("y")]))
     })
     describe("Func", () => {
         it("Declaration", () => {
@@ -102,10 +90,10 @@ describe("fromJson", () => {
         fromJson({
             "_type": "Call",
             "func": { "_type": "Identifier", "id": "f" },
-            "arg": { "_type": "Identifier", "id": "x" },
+            "args": [{ "_type": "Identifier", "id": "x" },]
         }).should.deep.equal(
             new $.Call(
-                new $.Identifier("f"), new $.Identifier("x")
+                new $.Identifier("f"), [new $.Identifier("x")]
             )
         )
     })

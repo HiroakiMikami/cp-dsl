@@ -13,11 +13,6 @@ describe("toString", () => {
             [new $.TypeIdentifier("int"), new $.TypeIdentifier("string")],
         ).toString().should.deep.equal("#map<#int,#string>")
     })
-    it("TupleType", () => {
-        new $.TupleType(
-            [new $.TypeIdentifier("x"), new $.TypeIdentifier("y")]
-        ).toString().should.deep.equal("#(#x,#y)")
-    })
 
     describe("Num", () => {
         it("int", () => {
@@ -32,11 +27,6 @@ describe("toString", () => {
     })
     it("Identifier", () => {
         new $.Identifier("x").toString().should.deep.equal("$x")
-    })
-    it("Tuple", () => {
-        new $.Tuple(
-            [new $.Identifier("x"), new $.Identifier("y")]
-        ).toString().should.deep.equal("($x,$y)")
     })
     describe("Func", () => {
         it("Declaration", () => {
@@ -70,8 +60,8 @@ describe("toString", () => {
     })
     it("Call", () => {
         new $.Call(
-            new $.Identifier("f"), new $.Identifier("x")
-        ).toString().should.deep.equal("($f($x))")
+            new $.Identifier("f"), [new $.Identifier("x"), new $.Identifier("y")]
+        ).toString().should.deep.equal("($f($x,$y))")
     })
 
     describe("Assign", () => {
