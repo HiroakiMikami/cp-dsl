@@ -65,3 +65,20 @@ TEST(TemplateDeductionTest, RecursiveFunctionTest) {
     EXPECT_EQ(int64_t(1), fact(1));
     EXPECT_EQ(int64_t(6), fact(3));
 }
+TEST(TemplateDeductionTest, ReturnVoid) {
+    auto _f = [&](int64_t n, auto _f) -> void {
+        auto f = [&](int64_t n) -> void {
+            return _f(n, _f);
+        };
+        if (n == 1) {
+            return ;
+        } else {
+            return f(n - 1);
+        }
+    };
+    auto f = [&](int64_t n) -> void {
+        return _f(n, _f);
+    };
+    f(10);
+}
+
