@@ -68,3 +68,35 @@ TEST(FunctionTest, PerformanceTest) {
 
     EXPECT_LT(ref - target, 1);
 }
+
+int64_t fact(int64_t n) {
+    if (n== 1) {
+        return 1;
+    } else {
+        return n * fact(n - 1);
+    }
+}
+
+TEST(PerformanceTest, RecursiveFunctionTest) {
+    auto _fact = [&](int64_t n, auto _fact) -> int64_t {
+        auto fact_ = [&](int64_t n) -> int64_t {
+            return _fact(n, _fact);
+        };
+        if (n == 1) {
+            return 1;
+        } else {
+            return n * fact_(n - 1);
+        }
+    };
+    auto fact_lambda = [&](int64_t n) {
+        return _fact(n, _fact);
+    };
+    auto N = 10000;
+    auto lambda = measure([&]() { fact_lambda(100); }, N);
+    auto func = measure([&]() { fact(100); }, N);
+
+    auto ref = double(func.count()) / N;
+    auto target = double(lambda.count()) / N;
+
+    EXPECT_LT(ref - target, 1);
+}
