@@ -29,8 +29,14 @@ export class TupleType implements Block {
 export type Type = TypeIdentifier | PolymorphicType | TupleType
 
 export class Num implements Block {
-    constructor(public readonly value: string) { }
-    toString(): string { return this.value }
+    constructor(public readonly value: string, public readonly isFloat: boolean) { }
+    toString(): string {
+        if (this.isFloat) {
+            return `f${this.value}`
+        } else {
+            return `i${this.value}`
+        }
+    }
 }
 export class Str implements Block {
     constructor(public readonly value: string) { }

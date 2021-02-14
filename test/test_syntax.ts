@@ -19,8 +19,13 @@ describe("toString", () => {
         ).toString().should.deep.equal("#(#x,#y)")
     })
 
-    it("Num", () => {
-        new $.Num("10").toString().should.deep.equal("10")
+    describe("Num", () => {
+        it("int", () => {
+            new $.Num("10", false).toString().should.deep.equal("i10")
+        })
+        it("float", () => {
+            new $.Num("10", true).toString().should.deep.equal("f10")
+        })
     })
     it("Str", () => {
         new $.Str("10").toString().should.deep.equal("\"10\"")

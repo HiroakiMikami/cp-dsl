@@ -19,7 +19,7 @@ export function fromJson(value: any): Block | null {
             )
 
         case "Num":
-            return new Num(value["value"])
+            return new Num(value["value"], value["isFloat"])
         case "Str":
             return new Str(value["value"])
         case "Identifier":

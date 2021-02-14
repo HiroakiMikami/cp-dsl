@@ -29,7 +29,7 @@ describe("fromJson", () => {
     })
 
     it("Num", () => {
-        fromJson({ "_type": "Num", "value": "10" }).should.deep.equal(new $.Num("10"))
+        fromJson({ "_type": "Num", "value": "10", "isFloat": true }).should.deep.equal(new $.Num("10", true))
     })
     it("Str", () => {
         fromJson({ "_type": "Str", "value": "10" }).should.deep.equal(new $.Str("10"))
