@@ -53,15 +53,6 @@ describe("transpile", () => {
 }`)
         })
     })
-    it("BinOp", () => {
-        transpile(
-            new $.BinOp(
-                new $.Identifier("x"),
-                new $.Identifier("+"),
-                new $.Identifier("y"),
-            )
-        ).should.equal("(x + y)")
-    })
     it("Call", () => {
         transpile(
             new $.Call(

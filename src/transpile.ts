@@ -1,4 +1,4 @@
-import { Assign, BinOp, Block, Branch, Break, Call, Case, Continue, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
+import { Assign, Block, Branch, Break, Call, Case, Continue, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
 import { indent } from "./util";
 
 export function transpile(block: Block): string {
@@ -22,8 +22,6 @@ export function transpile(block: Block): string {
         return `[&](${block.decls.map(transpile).join(", ")}) -> ${transpile(block.returnType)} {
 ${indent(transpile(block.body))}
 }`
-    } else if (block instanceof BinOp) {
-        return `(${transpile(block.lhs)} ${transpile(block.op)} ${transpile(block.rhs)})`
     } else if (block instanceof Call) {
         return `(${transpile(block.func)}(${block.args.map(transpile).join(", ")}))`
     } else if (block instanceof Assign) {

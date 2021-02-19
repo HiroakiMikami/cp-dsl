@@ -1,4 +1,4 @@
-import { Block, TypeIdentifier, PolymorphicType, Num, Str, Identifier, Declaration, Type, Func, Statement, BinOp, Expression, Call, Assign, Do, Loop, Branch, Default, Case, Return, Break, Continue, Suite } from "./syntax"
+import { Block, TypeIdentifier, PolymorphicType, Num, Str, Identifier, Declaration, Type, Func, Statement, Expression, Call, Assign, Do, Loop, Branch, Default, Case, Return, Break, Continue, Suite } from "./syntax"
 
 export function fromJson(value: any): Block | null {
     if (!value) {
@@ -30,12 +30,6 @@ export function fromJson(value: any): Block | null {
                 value["decls"].map(fromJson),
                 fromJson(value["returnType"]) as Type,
                 fromJson(value["body"]) as Statement,
-            )
-        case "BinOp":
-            return new BinOp(
-                fromJson(value["lhs"]) as Expression,
-                fromJson(value["op"]) as Identifier,
-                fromJson(value["rhs"]) as Expression,
             )
         case "Call":
             return new Call(

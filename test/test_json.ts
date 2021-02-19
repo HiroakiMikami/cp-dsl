@@ -72,20 +72,6 @@ describe("fromJson", () => {
             )
         })
     })
-    it("BinOp", () => {
-        fromJson({
-            "_type": "BinOp",
-            "lhs": { "_type": "Identifier", "id": "x" },
-            "op": { "_type": "Identifier", "id": "+" },
-            "rhs": { "_type": "Identifier", "id": "y" },
-        }).should.deep.equal(
-            new $.BinOp(
-                new $.Identifier("x"),
-                new $.Identifier("+"),
-                new $.Identifier("y"),
-            )
-        )
-    })
     it("Call", () => {
         fromJson({
             "_type": "Call",

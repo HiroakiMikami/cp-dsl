@@ -56,14 +56,6 @@ ${indent(this.body.toString())}
 }`
     }
 }
-export class BinOp implements Block {
-    constructor(
-        public readonly lhs: Expression,
-        public readonly op: Identifier,
-        public readonly rhs: Expression,
-    ) { }
-    toString(): string { return `(${this.lhs}${this.op}${this.rhs})` }
-}
 export class Call implements Block {
     constructor(
         public readonly func: Identifier,
@@ -71,7 +63,7 @@ export class Call implements Block {
     ) { }
     toString(): string { return `(${this.func}(${this.args.join(",")}))` }
 }
-export type Expression = Primitive | Identifier | Func | BinOp | Call
+export type Expression = Primitive | Identifier | Func | Call
 
 export class Assign implements Block {
     constructor(

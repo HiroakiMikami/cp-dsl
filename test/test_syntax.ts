@@ -53,11 +53,6 @@ describe("toString", () => {
             )
         })
     })
-    it("BinOp", () => {
-        new $.BinOp(
-            new $.Identifier("x"), new $.Identifier("+"), new $.Identifier("y")
-        ).toString().should.deep.equal("($x$+$y)")
-    })
     it("Call", () => {
         new $.Call(
             new $.Identifier("f"), [new $.Identifier("x"), new $.Identifier("y")]
