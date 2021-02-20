@@ -1,24 +1,25 @@
 import { Assign, Block, Branch, Break, Call, Case, Continue, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
 import { indent } from "./util";
 
-export interface TypeInfo {
-    typevarNames: ReadonlyArray<string>
+export interface LibInfo {
+    typevarNames: ReadonlyMap<string, ReadonlyArray<string>>
+    argNames: ReadonlyMap<string, ReadonlyArray<string>>
 }
 
 export class Transpiler {
     constructor(
-        private readonly types: ReadonlyMap<string, TypeInfo>
+        private readonly info: LibInfo
     ) { }
 
     transpile(block: Block): string {
         if (block instanceof TypeIdentifier) {
             return block.id
         } else if (block instanceof PolymorphicType) {
-            if (!this.types.has(block.id.id)) {
+            if (!this.info.typevarNames.has(block.id.id)) {
                 throw `Unknown type: ${block.id.id}`
             }
             const tvars = []
-            for (const name of this.types.get(block.id.id).typevarNames) {
+            for (const name of this.info.typevarNames.get(block.id.id)) {
                 if (!block.typevars.has(name)) {
                     throw `Typevar ${name} is not specified in ${block}`
                 }
@@ -42,7 +43,17 @@ export class Transpiler {
 ${indent(this.transpile(block.body))}
 }`
         } else if (block instanceof Call) {
-            return `(${this.transpile(block.func)}(${block.args.map(x => this.transpile(x)).join(", ")}))`
+            if (!this.info.argNames.has(block.func.id)) {
+                throw `Unknown function: ${block.func.id}`
+            }
+            const args = []
+            for (const name of this.info.argNames.get(block.func.id)) {
+                if (!block.args.has(name)) {
+                    throw `Argument ${name} is not specified in ${block}`
+                }
+                args.push(this.transpile(block.args.get(name)))
+            }
+            return `(${this.transpile(block.func)}(${args.join(", ")}))`
         } else if (block instanceof Assign) {
             if (block.isDefine) {
                 // Handle recursive function

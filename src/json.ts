@@ -14,14 +14,14 @@ export function fromJson(value: any): Block | null {
                 const typevarsJson = value["typevars"]
                 for (const key in typevarsJson) {
                     const value = fromJson(typevarsJson[key])
-                    typevars.set(key,value)
+                    typevars.set(key, value)
                 }
                 return new PolymorphicType(
                     fromJson(value["id"]) as TypeIdentifier,
                     typevars,
                 )
             })()
-        case "Num": 
+        case "Num":
             return new Num(value["value"], value["isFloat"])
         case "Str":
             return new Str(value["value"])
@@ -39,10 +39,18 @@ export function fromJson(value: any): Block | null {
                 fromJson(value["body"]) as Statement,
             )
         case "Call":
-            return new Call(
-                fromJson(value["func"]) as Identifier,
-                value["args"].map(fromJson),
-            )
+            return (() => {
+                const args = new Map()
+                const argsJson = value["args"]
+                for (const key in argsJson) {
+                    const value = fromJson(argsJson[key])
+                    args.set(key, value)
+                }
+                return new Call(
+                    fromJson(value["func"]) as Identifier,
+                    args,
+                )
+            })()
 
         case "Assign":
             return new Assign(

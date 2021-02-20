@@ -61,9 +61,9 @@ ${indent(this.body.toString())}
 export class Call implements Block {
     constructor(
         public readonly func: Identifier,
-        public readonly args: ReadonlyArray<Expression>,
+        public readonly args: ReadonlyMap<string, Expression>,
     ) { }
-    toString(): string { return `(${this.func}(${this.args.join(",")}))` }
+    toString(): string { return `(${this.func}(${Array.from(this.args).map(x => `${x[0]}=${x[1]}`).join(",")}))` }
 }
 export type Expression = Primitive | Identifier | Func | Call
 

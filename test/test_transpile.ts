@@ -7,11 +7,14 @@ import { Transpiler } from "../src/transpile"
 describe("transpile", () => {
     let transpiler: Transpiler | null = null
     beforeEach(() => {
-        transpiler = new Transpiler(
-            new Map([
-                ["Map", { "typevarNames": ["K", "V"] }]
+        transpiler = new Transpiler({
+            "typevarNames": new Map([
+                ["Map", ["K", "V"]]
+            ]),
+            "argNames": new Map([
+                ["f", ["a0", "a1"]]
             ])
-        )
+        })
     })
     it("TypeIdentifier", () => {
         transpiler.transpile(new $.TypeIdentifier("Integer")).should.equal("Integer")
@@ -88,13 +91,45 @@ describe("transpile", () => {
 }`)
         })
     })
-    it("Call", () => {
-        transpiler.transpile(
-            new $.Call(
-                new $.Identifier("f"),
-                [new $.Identifier("x"), new $.Identifier("y")],
-            )
-        ).should.equal("(f(x, y))")
+    describe("Call", () => {
+        it("success", () => {
+            transpiler.transpile(
+                new $.Call(
+                    new $.Identifier("f"),
+                    new Map([
+                        ["a0", new $.Identifier("x")],
+                        ["a1", new $.Identifier("y")],
+                    ]),
+                )
+            ).should.equal("(f(x, y))")
+        })
+        it("unknown function", () => {
+            const f = () => {
+                transpiler.transpile(
+                    new $.Call(
+                        new $.Identifier("g"),
+                        new Map([
+                            ["a0", new $.Identifier("x")],
+                            ["a1", new $.Identifier("y")],
+                        ]),
+                    )
+                )
+            }
+            f.should.throw("Unknown function: g")
+        })
+        it("lack argument", () => {
+            const f = () => {
+                transpiler.transpile(
+                    new $.Call(
+                        new $.Identifier("f"),
+                        new Map([
+                            ["a1", new $.Identifier("y")],
+                        ]),
+                    )
+                )
+            }
+            f.should.throw("Argument a0 is not specified in ($f(a1=$y))")
+        })
     })
 
     describe("Assign", () => {
@@ -135,7 +170,10 @@ describe("transpile", () => {
                         new $.TypeIdentifier("void"),
                         new $.Do(new $.Call(
                             new $.Identifier("f"),
-                            [new $.Identifier("n"), new $.Identifier("m")],
+                            new Map([
+                                ["a0", new $.Identifier("n")],
+                                ["a1", new $.Identifier("m")],
+                            ]),
                         )),
                     )
                 )

@@ -58,8 +58,12 @@ describe("toString", () => {
     })
     it("Call", () => {
         new $.Call(
-            new $.Identifier("f"), [new $.Identifier("x"), new $.Identifier("y")]
-        ).toString().should.deep.equal("($f($x,$y))")
+            new $.Identifier("f"),
+            new Map([
+                ["a0", new $.Identifier("x")],
+                ["a1", new $.Identifier("y")],
+            ]),
+        ).toString().should.deep.equal("($f(a0=$x,a1=$y))")
     })
 
     describe("Assign", () => {

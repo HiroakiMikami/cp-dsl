@@ -78,10 +78,12 @@ describe("fromJson", () => {
         fromJson({
             "_type": "Call",
             "func": { "_type": "Identifier", "id": "f" },
-            "args": [{ "_type": "Identifier", "id": "x" },]
+            "args": {
+                "a": { "_type": "Identifier", "id": "x" },
+            },
         }).should.deep.equal(
             new $.Call(
-                new $.Identifier("f"), [new $.Identifier("x")]
+                new $.Identifier("f"), new Map([["a", new $.Identifier("x")]])
             )
         )
     })
