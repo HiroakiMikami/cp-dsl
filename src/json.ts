@@ -9,12 +9,19 @@ export function fromJson(value: any): Block | null {
         case "TypeIdentifier":
             return new TypeIdentifier(value["id"])
         case "PolymorphicType":
-            return new PolymorphicType(
-                fromJson(value["id"]) as TypeIdentifier,
-                value["typevars"].map(fromJson),
-            )
-
-            case "Num":
+            return (() => {
+                const typevars = new Map()
+                const typevarsJson = value["typevars"]
+                for (const key in typevarsJson) {
+                    const value = fromJson(typevarsJson[key])
+                    typevars.set(key,value)
+                }
+                return new PolymorphicType(
+                    fromJson(value["id"]) as TypeIdentifier,
+                    typevars,
+                )
+            })()
+        case "Num": 
             return new Num(value["value"], value["isFloat"])
         case "Str":
             return new Str(value["value"])
@@ -72,7 +79,7 @@ export function fromJson(value: any): Block | null {
         case "Suite":
             const stmts = value["stmts"].map(fromJson)
             return new Suite(stmts)
-    
+
         default:
             break;
     }

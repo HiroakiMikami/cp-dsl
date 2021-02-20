@@ -2,42 +2,77 @@ import * as chai from 'chai'
 chai.should()
 
 import * as $ from "../src/syntax"
-import { transpile } from "../src/transpile"
+import { Transpiler } from "../src/transpile"
 
 describe("transpile", () => {
-    it("TypeIdentifier", () => {
-        transpile(new $.TypeIdentifier("Integer")).should.equal("Integer")
+    let transpiler: Transpiler | null = null
+    beforeEach(() => {
+        transpiler = new Transpiler(
+            new Map([
+                ["Map", { "typevarNames": ["K", "V"] }]
+            ])
+        )
     })
-    it("PolymorphicType", () => {
-        transpile(new $.PolymorphicType(
-            new $.TypeIdentifier("Map"),
-            [new $.TypeIdentifier("Integer"), new $.TypeIdentifier("String")],
-        )).should.equal("Map<Integer, String>")
+    it("TypeIdentifier", () => {
+        transpiler.transpile(new $.TypeIdentifier("Integer")).should.equal("Integer")
+    })
+    describe("PolymorphicType", () => {
+        it("success", () => {
+            transpiler.transpile(new $.PolymorphicType(
+                new $.TypeIdentifier("Map"),
+                new Map([
+                    ["K", new $.TypeIdentifier("Integer")],
+                    ["V", new $.TypeIdentifier("String")]
+                ]),
+            )).should.equal("Map<Integer, String>")
+        })
+        it("unknown type", () => {
+            const f = () => {
+                transpiler.transpile(new $.PolymorphicType(
+                    new $.TypeIdentifier("Array"),
+                    new Map([
+                        ["V", new $.TypeIdentifier("String")]
+                    ]),
+                ))
+            }
+            f.should.throw("Unknown type: Array")
+        })
+        it("lack typevar", () => {
+            const f = () => {
+                transpiler.transpile(new $.PolymorphicType(
+                    new $.TypeIdentifier("Map"),
+                    new Map([
+                        ["V", new $.TypeIdentifier("String")]
+                    ]),
+                ))
+            }
+            f.should.throw("Typevar K is not specified in #Map<V=#String>")
+        })
     })
 
     describe("Num", () => {
         it("float", () => {
-            transpile(new $.Num("10", true)).should.equal("Float(10)")
+            transpiler.transpile(new $.Num("10", true)).should.equal("Float(10)")
         })
         it("int", () => {
-            transpile(new $.Num("10", false)).should.equal("Integer(10L)")
+            transpiler.transpile(new $.Num("10", false)).should.equal("Integer(10L)")
         })
     })
     it("Str", () => {
-        transpile(new $.Str("x")).should.equal("String(\"x\")")
-        transpile(new $.Str("x\"y\"")).should.equal(`String("x\\"y\\"")`)
+        transpiler.transpile(new $.Str("x")).should.equal("String(\"x\")")
+        transpiler.transpile(new $.Str("x\"y\"")).should.equal(`String("x\\"y\\"")`)
     })
     it("Identifier", () => {
-        transpile(new $.Identifier("x")).should.equal("x")
+        transpiler.transpile(new $.Identifier("x")).should.equal("x")
     })
     describe("Func", () => {
         it("Declaration", () => {
-            transpile(new $.Declaration(
+            transpiler.transpile(new $.Declaration(
                 new $.Identifier("x"), new $.TypeIdentifier("i")
             )).should.equal("i &x")
         })
         it("Func", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Func(
                     [
                         new $.Declaration(
@@ -54,7 +89,7 @@ describe("transpile", () => {
         })
     })
     it("Call", () => {
-        transpile(
+        transpiler.transpile(
             new $.Call(
                 new $.Identifier("f"),
                 [new $.Identifier("x"), new $.Identifier("y")],
@@ -64,7 +99,7 @@ describe("transpile", () => {
 
     describe("Assign", () => {
         it("define", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Assign(
                     new $.Identifier("x"),
                     true,
@@ -73,7 +108,7 @@ describe("transpile", () => {
             ).should.equal("auto x = y;\n")
         })
         it("assign", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Assign(
                     new $.Identifier("x"),
                     false,
@@ -82,7 +117,7 @@ describe("transpile", () => {
             ).should.equal("x = y;\n")
         })
         it("define function", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Assign(
                     new $.Identifier("f"),
                     true,
@@ -117,12 +152,12 @@ auto f = [&](Integer &n, Float &m) -> void {
         })
     })
     it("Do", () => {
-        transpile(
+        transpiler.transpile(
             new $.Do(new $.Identifier("x"))
         ).should.equal("x;\n")
     })
     it("Loop", () => {
-        transpile(
+        transpiler.transpile(
             new $.Loop(
                 new $.Identifier("x"), new $.Identifier("xs"),
                 new $.Do(new $.Identifier("z")),
@@ -134,7 +169,7 @@ auto f = [&](Integer &n, Float &m) -> void {
     })
     describe("Branch", () => {
         it("Case", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Case(
                     new $.Identifier("c"),
                     new $.Do(new $.Identifier("x")),
@@ -142,7 +177,7 @@ auto f = [&](Integer &n, Float &m) -> void {
             ).should.equal("else if (c) {\n  x;\n}\n")
         })
         it("Default", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Default(new $.Do(new $.Identifier("x")))
             ).should.equal("else {\n  x;\n}\n")
         })
@@ -153,7 +188,7 @@ auto f = [&](Integer &n, Float &m) -> void {
             const _case1 = new $.Case(
                 new $.Identifier("cond1"), new $.Do(new $.Identifier("y"))
             )
-            transpile(
+            transpiler.transpile(
                 new $.Branch([_case0, _case1], null)
             ).should.equal(`if (false) {}
 else if (cond0) {
@@ -173,7 +208,7 @@ else if (cond1) {
             )
             const _default = new $.Default(new $.Do(new $.Identifier("z")))
 
-            transpile(
+            transpiler.transpile(
                 new $.Branch([_case0, _case1], _default)
             ).should.equal(`if (false) {}
 else if (cond0) {
@@ -190,22 +225,22 @@ else {
     })
     describe("Return", () => {
         it("WithValue", () => {
-            transpile(
+            transpiler.transpile(
                 new $.Return(new $.Identifier("x"))
             ).should.equal("return x;\n")
         })
         it("WithoutValue", () => {
-            transpile(new $.Return(null)).should.equal("return;\n")
+            transpiler.transpile(new $.Return(null)).should.equal("return;\n")
         })
     })
     it("Break", () => {
-        transpile(new $.Break()).should.equal("break;\n")
+        transpiler.transpile(new $.Break()).should.equal("break;\n")
     })
     it("Continue", () => {
-        transpile(new $.Continue()).should.equal("continue;\n")
+        transpiler.transpile(new $.Continue()).should.equal("continue;\n")
     })
     it("Suite", () => {
-        transpile(
+        transpiler.transpile(
             new $.Suite([new $.Break, new $.Continue])
         ).should.equal("break;\ncontinue;\n")
     })

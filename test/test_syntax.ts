@@ -10,8 +10,11 @@ describe("toString", () => {
     it("PolymorphicType", () => {
         new $.PolymorphicType(
             new $.TypeIdentifier("map"),
-            [new $.TypeIdentifier("int"), new $.TypeIdentifier("string")],
-        ).toString().should.deep.equal("#map<#int,#string>")
+            new Map([
+                ["V", new $.TypeIdentifier("int")],
+                ["K", new $.TypeIdentifier("string")]
+            ]),
+        ).toString().should.deep.equal("#map<V=#int,K=#string>")
     })
 
     describe("Num", () => {

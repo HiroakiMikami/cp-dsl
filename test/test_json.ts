@@ -15,10 +15,12 @@ describe("fromJson", () => {
         fromJson({
             "_type": "PolymorphicType",
             "id": { "_type": "TypeIdentifier", "id": "x" },
-            "typevars": [{ "_type": "TypeIdentifier", "id": "y" }]
+            "typevars": {
+                "Y": { "_type": "TypeIdentifier", "id": "y" }
+            },
         }).should.deep.equal(new $.PolymorphicType(
             new $.TypeIdentifier("x"),
-            [new $.TypeIdentifier("y")],
+            new Map([["Y", new $.TypeIdentifier("y")]]),
         ))
     })
 

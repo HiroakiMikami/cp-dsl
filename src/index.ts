@@ -1,5 +1,5 @@
 import { fromJson as _fromJson } from "./json";
-import { transpile as _transpile } from "./transpile";
+import { Transpiler as _Transpiler } from "./transpile";
 
 export const fromJson = _fromJson
-export const transpile = _transpile
+export const Transpiler = _Transpiler

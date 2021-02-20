@@ -11,9 +11,11 @@ export class TypeIdentifier implements Block {
 export class PolymorphicType implements Block {
     constructor(
         public readonly id: TypeIdentifier,
-        public readonly typevars: ReadonlyArray<Type>,
+        public readonly typevars: ReadonlyMap<string, Type>,
     ) { }
-    toString(): string { return `${this.id}<${this.typevars.join(",")}>` }
+    toString(): string {
+        return `${this.id}<${Array.from(this.typevars).map(x => `${x[0]}=${x[1]}`).join(",")}>`
+    }
 }
 export type Type = TypeIdentifier | PolymorphicType
 
