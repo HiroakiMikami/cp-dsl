@@ -1,4 +1,4 @@
-import { Block, TypeIdentifier, PolymorphicType, Num, Str, Identifier, Declaration, Type, Func, Statement, Expression, Call, Assign, Do, Loop, Branch, Default, Case, Return, Break, Continue, Suite } from "./syntax"
+import { Block, TypeIdentifier, PolymorphicType, Num, Str, Identifier, Declaration, Type, Func, Statement, Expression, Call, Assign, Do, Loop, Branch, Default, Case, Return, Break, Continue, Suite, Create } from "./syntax"
 
 export function fromJson(value: any): Block | null {
     if (!value) {
@@ -38,6 +38,19 @@ export function fromJson(value: any): Block | null {
                 fromJson(value["returnType"]) as Type,
                 fromJson(value["body"]) as Statement,
             )
+        case "Create":
+            return (() => {
+                const args = new Map()
+                const argsJson = value["args"]
+                for (const key in argsJson) {
+                    const value = fromJson(argsJson[key])
+                    args.set(key, value)
+                }
+                return new Create(
+                    fromJson(value["type"]) as Type,
+                    args,
+                )
+            })()
         case "Call":
             return (() => {
                 const args = new Map()

@@ -58,6 +58,13 @@ ${indent(this.body.toString())}
 }`
     }
 }
+export class Create implements Block {
+    constructor(
+        public readonly type: Type,
+        public readonly args: ReadonlyMap<string, Expression>,
+    ) { }
+    toString(): string { return `(${this.type}(${Array.from(this.args).map(x => `${x[0]}=${x[1]}`).join(",")}))` }
+}
 export class Call implements Block {
     constructor(
         public readonly func: Identifier,
@@ -65,7 +72,7 @@ export class Call implements Block {
     ) { }
     toString(): string { return `(${this.func}(${Array.from(this.args).map(x => `${x[0]}=${x[1]}`).join(",")}))` }
 }
-export type Expression = Primitive | Identifier | Func | Call
+export type Expression = Primitive | Identifier | Func | Create | Call
 
 export class Assign implements Block {
     constructor(

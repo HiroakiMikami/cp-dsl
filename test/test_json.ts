@@ -74,6 +74,19 @@ describe("fromJson", () => {
             )
         })
     })
+    it("Create", () => {
+        fromJson({
+            "_type": "Create",
+            "type": { "_type": "TypeIdentifier", "id": "V" },
+            "args": {
+                "a": { "_type": "Identifier", "id": "x" },
+            },
+        }).should.deep.equal(
+            new $.Create(
+                new $.TypeIdentifier("V"), new Map([["a", new $.Identifier("x")]])
+            )
+        )
+    })
     it("Call", () => {
         fromJson({
             "_type": "Call",

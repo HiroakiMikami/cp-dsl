@@ -9,7 +9,12 @@ describe("transpile", () => {
     beforeEach(() => {
         transpiler = new Transpiler({
             "typevarNames": new Map([
+                ["Array", ["V"]],
                 ["Map", ["K", "V"]]
+            ]),
+            "createArgNames": new Map([
+                ["Integer", ["n"]],
+                ["Array", ["size", "capacity"]],
             ]),
             "argNames": new Map([
                 ["f", ["a0", "a1"]]
@@ -32,13 +37,13 @@ describe("transpile", () => {
         it("unknown type", () => {
             const f = () => {
                 transpiler.transpile(new $.PolymorphicType(
-                    new $.TypeIdentifier("Array"),
+                    new $.TypeIdentifier("Set"),
                     new Map([
                         ["V", new $.TypeIdentifier("String")]
                     ]),
                 ))
             }
-            f.should.throw("Unknown type: Array")
+            f.should.throw("Unknown type: Set")
         })
         it("lack typevar", () => {
             const f = () => {
@@ -89,6 +94,52 @@ describe("transpile", () => {
             ).should.equal(`[&](y &x) -> y {
   z;
 }`)
+        })
+    })
+    describe("Create", () => {
+        it("TypeIdentifier", () => {
+            transpiler.transpile(
+                new $.Create(
+                    new $.TypeIdentifier("Integer"),
+                    new Map([["n", new $.Identifier("x")]]),
+                )
+            ).should.equal("(Integer{x})")
+        })
+        it("PolymorphicType", () => {
+            transpiler.transpile(
+                new $.Create(
+                    new $.PolymorphicType(
+                        new $.TypeIdentifier("Array"),
+                        new Map([["V", new $.TypeIdentifier("Integer")]]),
+                    ),
+                    new Map([["capacity", new $.Identifier("y")], ["size", new $.Identifier("x")]]),
+                )
+            ).should.equal("(Array<Integer>{x, y})")
+        })
+        it("unknown argument", () => {
+            const f = () => {
+                transpiler.transpile(
+                    new $.Create(
+                        new $.TypeIdentifier("g"),
+                        new Map([
+                            ["a0", new $.Identifier("x")],
+                            ["a1", new $.Identifier("y")],
+                        ]),
+                    )
+                )
+            }
+            f.should.throw("Unknown type: g")
+        })
+        it("lack argument", () => {
+            const f = () => {
+                transpiler.transpile(
+                    new $.Create(
+                        new $.TypeIdentifier("Integer"),
+                        new Map([]),
+                    )
+                )
+            }
+            f.should.throw("Argument n is not specified in (#Integer())")
         })
     })
     describe("Call", () => {

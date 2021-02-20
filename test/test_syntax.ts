@@ -56,6 +56,15 @@ describe("toString", () => {
             )
         })
     })
+    it("Create", () => {
+        new $.Create(
+            new $.TypeIdentifier("V"),
+            new Map([
+                ["a0", new $.Identifier("x")],
+                ["a1", new $.Identifier("y")],
+            ]),
+        ).toString().should.deep.equal("(#V(a0=$x,a1=$y))")
+    })
     it("Call", () => {
         new $.Call(
             new $.Identifier("f"),

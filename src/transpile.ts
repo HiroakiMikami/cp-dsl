@@ -1,8 +1,9 @@
-import { Assign, Block, Branch, Break, Call, Case, Continue, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
+import { Assign, Block, Branch, Break, Call, Case, Continue, Create, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
 import { indent } from "./util";
 
 export interface LibInfo {
     typevarNames: ReadonlyMap<string, ReadonlyArray<string>>
+    createArgNames: ReadonlyMap<string, ReadonlyArray<string>>
     argNames: ReadonlyMap<string, ReadonlyArray<string>>
 }
 
@@ -42,6 +43,26 @@ export class Transpiler {
             return `[&](${block.decls.map(x => this.transpile(x)).join(", ")}) -> ${this.transpile(block.returnType)} {
 ${indent(this.transpile(block.body))}
 }`
+        } else if (block instanceof Create) {
+            let type = ""
+            if (block.type instanceof TypeIdentifier) {
+                type = block.type.id
+            } else if (block.type instanceof PolymorphicType) {
+                type = block.type.id.id
+            } else {
+                throw `Unknown type: ${block.type}`
+            }
+            if (!this.info.createArgNames.has(type)) {
+                throw `Unknown type: ${type}`
+            }
+            const args = []
+            for (const name of this.info.createArgNames.get(type)) {
+                if (!block.args.has(name)) {
+                    throw `Argument ${name} is not specified in ${block}`
+                }
+                args.push(this.transpile(block.args.get(name)))
+            }
+            return `(${this.transpile(block.type)}{${args.join(", ")}})`
         } else if (block instanceof Call) {
             if (!this.info.argNames.has(block.func.id)) {
                 throw `Unknown function: ${block.func.id}`
