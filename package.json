@@ -1,5 +1,5 @@
 {
-  "name": "cp-dsl-evaluator",
+  "name": "cp-dsl",
   "version": "1.0.0",
   "description": "",
   "main": "out/src/index.js",
