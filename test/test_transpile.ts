@@ -4,6 +4,34 @@ chai.should()
 import * as $ from "../src/syntax"
 import { Transpiler } from "../src/transpile"
 
+describe("bundle", () => {
+    it("returns compilable code", () => {
+        const transpiler = new Transpiler({
+            "typevarNames": new Map([
+                ["Array", ["V"]],
+                ["Map", ["K", "V"]]
+            ]),
+            "createArgNames": new Map([
+                ["Integer", ["n"]],
+                ["Array", ["size", "capacity"]],
+            ]),
+            "argNames": new Map([
+                ["f", ["a0", "a1"]]
+            ]),
+            "includes": new Set(["iostream"]),
+            "lib": "template <typename T>\nT double(T t) { return t * 2; }\n",
+        })
+        transpiler.bundle(new $.Do(new $.Num("10", false))).should.equal(`#include <iostream>
+template <typename T>
+T double(T t) { return t * 2; }
+
+int main() {
+  Integer(10L);
+}
+`)
+    })
+})
+
 describe("transpile", () => {
     let transpiler: Transpiler | null = null
     beforeEach(() => {
@@ -18,7 +46,9 @@ describe("transpile", () => {
             ]),
             "argNames": new Map([
                 ["f", ["a0", "a1"]]
-            ])
+            ]),
+            "includes": new Set(["stdio"]),
+            "lib": "template <typename T>\nT double(T t) { return t * 2; }\n",
         })
     })
     it("TypeIdentifier", () => {

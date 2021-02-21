@@ -5,12 +5,21 @@ export interface LibInfo {
     typevarNames: ReadonlyMap<string, ReadonlyArray<string>>
     createArgNames: ReadonlyMap<string, ReadonlyArray<string>>
     argNames: ReadonlyMap<string, ReadonlyArray<string>>
+    includes: ReadonlySet<string>
+    lib: string
 }
 
 export class Transpiler {
     constructor(
         private readonly info: LibInfo
     ) { }
+
+    bundle(block: Block): string {
+        const main = "int main() {\n" + indent(this.transpile(block)) + "\n}\n"
+        const includes = Array.from(this.info.includes).map(x => `#include <${x}>`).join("\n")
+
+        return includes + "\n" + this.info.lib + "\n" + main
+    }
 
     transpile(block: Block): string {
         if (block instanceof TypeIdentifier) {
