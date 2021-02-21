@@ -127,7 +127,8 @@ export class Case implements Block {
         public readonly cond: Expression,
         public readonly body: Statement,
     ) { }
-    toString() { return `case(${this.cond}):
+    toString() {
+        return `case(${this.cond}):
 ${indent(this.body.toString())}
 ` }
 }
@@ -266,4 +267,130 @@ export function createBlockFromJson(value: any): Block | null {
             break;
     }
     throw new Error(`Invalid JSON: ${JSON.stringify(value)}`)
+}
+
+export function createJsonFromBlock(block: Block | null): any | null {
+    if (!block) {
+        return null
+    }
+
+    if (block instanceof TypeIdentifier) {
+        return {
+            "_type": "TypeIdentifier",
+            "id": block.id,
+        }
+    } else if (block instanceof PolymorphicType) {
+        let out: any = {
+            "_type": "PolymorphicType",
+            "id": createJsonFromBlock(block.id),
+        }
+        let tvars: any = {}
+        block.typevars.forEach((value, key) => {
+            tvars[key] = createJsonFromBlock(value)
+        })
+        out["typevars"] = tvars
+        return out
+    } else if (block instanceof Num) {
+        return {
+            "_type": "Num",
+            "value": block.value,
+            "isFloat": block.isFloat,
+        }
+    } else if (block instanceof Str) {
+        return {
+            "_type": "Str",
+            "value": block.value,
+        }
+    } else if (block instanceof Identifier) {
+        return {
+            "_type": "Identifier",
+            "id": block.id,
+        }
+    } else if (block instanceof Declaration) {
+        return {
+            "_type": "Declaration",
+            "arg": createJsonFromBlock(block.arg),
+            "type": createJsonFromBlock(block.type),
+        }
+    } else if (block instanceof Func) {
+        return {
+            "_type": "Func",
+            "decls": block.decls.map(createJsonFromBlock),
+            "returnType": createJsonFromBlock(block.returnType),
+            "body": createJsonFromBlock(block.body),
+        }
+    } else if (block instanceof Create) {
+        let out: any = {
+            "_type": "Create",
+            "type": createJsonFromBlock(block.type)
+        }
+        let args: any = {}
+        block.args.forEach((value, key) => {
+            args[key] = createJsonFromBlock(value)
+        })
+        out["args"] = args
+        return out
+    } else if (block instanceof Call) {
+        let out: any = {
+            "_type": "Call",
+            "func": createJsonFromBlock(block.func)
+        }
+        let args: any = {}
+        block.args.forEach((value, key) => {
+            args[key] = createJsonFromBlock(value)
+        })
+        out["args"] = args
+        return out
+    } else if (block instanceof Assign) {
+        return {
+            "_type": "Assign",
+            "lhs": createJsonFromBlock(block.lhs),
+            "isDefine": block.isDefine,
+            "rhs": createJsonFromBlock(block.rhs),
+        }
+    } else if (block instanceof Do) {
+        return{
+            "_type": "Do",
+            "expr": createJsonFromBlock(block.expr)
+        }
+    } else if (block instanceof Loop) {
+        return {
+            "_type": "Loop",
+            "id": createJsonFromBlock(block.id),
+            "iterable": createJsonFromBlock(block.iterable),
+            "body": createJsonFromBlock(block.body),
+        }
+    } else if (block instanceof Case) {
+        return {
+            "_type": "Case",
+            "cond": createJsonFromBlock(block.cond),
+            "body": createJsonFromBlock(block.body),
+        }
+    } else if (block instanceof Default) {
+        return {
+            "_type": "Default",
+            "body": createJsonFromBlock(block.body),
+        }
+    } else if (block instanceof Branch) {
+        return {
+            "_type": "Branch",
+            "cases": block.cases.map(createJsonFromBlock),
+            "default": createJsonFromBlock(block._default),
+        }
+    } else if (block instanceof Return) {
+        return {
+            "_type": "Return",
+            "value": createJsonFromBlock(block.value)
+        }
+    } else if (block instanceof Break) {
+        return { "_type": "Break" }
+    } else if (block instanceof Continue) {
+        return { "_type": "Continue" }
+    } else if (block instanceof Suite) {
+        return {
+            "_type": "Suite",
+            "stmts": block.stmts.map(createJsonFromBlock),
+        }
+    }
+    throw new Error(`Invalid block: ${block}`)
 }

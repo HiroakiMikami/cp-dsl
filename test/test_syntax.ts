@@ -2,7 +2,7 @@ import * as chai from 'chai'
 const should = chai.should()
 
 import * as $ from "../src/syntax"
-import {createBlockFromJson} from "../src/index"
+import {createBlockFromJson, createJsonFromBlock} from "../src/index"
 
 describe("toString", () => {
     it("TypeIdentifier", () => {
@@ -154,7 +154,7 @@ describe("toString", () => {
 })
 
 
-describe("fromJson", () => {
+describe("createBlockFromJson", () => {
     it("null", () => {
         should.not.exist(createBlockFromJson(null))
     })
@@ -389,5 +389,235 @@ describe("fromJson", () => {
             "_type": "Suite",
             "stmts": [{ "_type": "Break" }],
         }).should.deep.equal(new $.Suite([new $.Break]))
+    })
+})
+
+describe("createJsonFromBlock", () => {
+    it("null", () => {
+        should.not.exist(createJsonFromBlock(null))
+    })
+    it("TypeIdentifier", () => {
+        createJsonFromBlock(new $.TypeIdentifier("x")).should.deep.equal({ "_type": "TypeIdentifier", "id": "x" })
+    })
+    it("PolymorphicType", () => {
+        createJsonFromBlock(new $.PolymorphicType(
+            new $.TypeIdentifier("x"),
+            new Map([["Y", new $.TypeIdentifier("y")]]),
+        )).should.deep.equal({
+            "_type": "PolymorphicType",
+            "id": { "_type": "TypeIdentifier", "id": "x" },
+            "typevars": {
+                "Y": { "_type": "TypeIdentifier", "id": "y" }
+            },
+        })
+    })
+
+    it("Num", () => {
+        createJsonFromBlock(new $.Num("10", true)).should.deep.equal({ "_type": "Num", "value": "10", "isFloat": true })
+    })
+    it("Str", () => {
+        createJsonFromBlock(new $.Str("10")).should.deep.equal({ "_type": "Str", "value": "10" })
+    })
+    it("Identifier", () => {
+        createJsonFromBlock(new $.Identifier("x")).should.deep.equal({ "_type": "Identifier", "id": "x" })
+    })
+    describe("Func", () => {
+        it("Declaration", () => {
+            createJsonFromBlock(
+                new $.Declaration(
+                    new $.Identifier("x"), new $.TypeIdentifier("y")
+                )
+            ).should.deep.equal({
+                "_type": "Declaration",
+                "arg": { "_type": "Identifier", "id": "x" },
+                "type": { "_type": "TypeIdentifier", "id": "y" },
+            })
+        })
+        it("Func", () => {
+            createJsonFromBlock(
+                new $.Func(
+                    [
+                        new $.Declaration(
+                            new $.Identifier("x"),
+                            new $.TypeIdentifier("y")
+                        )
+                    ],
+                    new $.TypeIdentifier("y"),
+                    new $.Do(new $.Identifier("z")),
+                )
+            ).should.deep.equal({
+                "_type": "Func",
+                "decls": [
+                    {
+                        "_type": "Declaration",
+                        "arg": { "_type": "Identifier", "id": "x" },
+                        "type": { "_type": "TypeIdentifier", "id": "y" },
+                    }
+                ],
+                "returnType": { "_type": "TypeIdentifier", "id": "y" },
+                "body": {
+                    "_type": "Do",
+                    "expr": { "_type": "Identifier", "id": "z" },
+                }
+            })
+        })
+    })
+    it("Create", () => {
+        createJsonFromBlock(
+            new $.Create(
+                new $.TypeIdentifier("V"), new Map([["a", new $.Identifier("x")]])
+            )
+        ).should.deep.equal({
+            "_type": "Create",
+            "type": { "_type": "TypeIdentifier", "id": "V" },
+            "args": {
+                "a": { "_type": "Identifier", "id": "x" },
+            },
+        })
+    })
+    it("Call", () => {
+        createJsonFromBlock(
+            new $.Call(
+                new $.Identifier("f"), new Map([["a", new $.Identifier("x")]])
+            )
+        ).should.deep.equal({
+            "_type": "Call",
+            "func": { "_type": "Identifier", "id": "f" },
+            "args": {
+                "a": { "_type": "Identifier", "id": "x" },
+            },
+        })
+    })
+
+    it("Assign", () => {
+        createJsonFromBlock(
+            new $.Assign(
+                new $.Identifier("x"), true, new $.Identifier("y")
+            )
+        ).should.deep.equal({
+            "_type": "Assign",
+            "lhs": { "_type": "Identifier", "id": "x" },
+            "isDefine": true,
+            "rhs": { "_type": "Identifier", "id": "y" },
+        })
+    })
+    it("Do", () => {
+        createJsonFromBlock(new $.Do(new $.Identifier("x"))).should.deep.equal({
+            "_type": "Do",
+            "expr": { "_type": "Identifier", "id": "x" },
+        })
+    })
+    it("Loop", () => {
+        createJsonFromBlock(
+            new $.Loop(
+                new $.Identifier("x"), new $.Identifier("xs"),
+                new $.Do(new $.Identifier("z")),
+            )
+        ).should.deep.equal({
+            "_type": "Loop",
+            "id": { "_type": "Identifier", "id": "x" },
+            "iterable": { "_type": "Identifier", "id": "xs" },
+            "body": {
+                "_type": "Do",
+                "expr": { "_type": "Identifier", "id": "z" },
+            }
+        })
+    })
+    describe("Branch", () => {
+        it("Case", () => {
+            createJsonFromBlock(
+                new $.Case(
+                    new $.Identifier("c"), new $.Do(new $.Identifier("x"))
+                )
+            ).should.deep.equal({
+                "_type": "Case",
+                "cond": { "_type": "Identifier", "id": "c" },
+                "body": {
+                    "_type": "Do",
+                    "expr": { "_type": "Identifier", "id": "x" },
+                }
+            })
+        })
+        it("Default", () => {
+            createJsonFromBlock(new $.Default(new $.Do(new $.Identifier("x")))).should.deep.equal({
+                "_type": "Default",
+                "body": {
+                    "_type": "Do",
+                    "expr": { "_type": "Identifier", "id": "x" },
+                }
+            })
+        })
+        it("Branch", () => {
+            const _case = new $.Case(
+                new $.Identifier("cond0"), new $.Do(new $.Identifier("x"))
+            )
+            createJsonFromBlock(new $.Branch([_case], null)).should.deep.equal({
+                "_type": "Branch",
+                "cases": [
+                    {
+                        "_type": "Case",
+                        "cond": { "_type": "Identifier", "id": "cond0" },
+                        "body": {
+                            "_type": "Do",
+                            "expr": { "_type": "Identifier", "id": "x" },
+                        }
+                    }
+                ],
+                "default": null,
+            })
+        })
+        it("BranchWithDefault", () => {
+            const _case = new $.Case(
+                new $.Identifier("cond0"), new $.Do(new $.Identifier("x"))
+            )
+            const _default = new $.Default(new $.Do(new $.Identifier("z")))
+
+            createJsonFromBlock(new $.Branch([_case], _default)).should.deep.equal({
+                "_type": "Branch",
+                "cases": [
+                    {
+                        "_type": "Case",
+                        "cond": { "_type": "Identifier", "id": "cond0" },
+                        "body": {
+                            "_type": "Do",
+                            "expr": { "_type": "Identifier", "id": "x" },
+                        }
+                    }
+                ],
+                "default": {
+                    "_type": "Default",
+                    "body": {
+                        "_type": "Do",
+                        "expr": { "_type": "Identifier", "id": "z" },
+                    }
+                },
+            })
+        })
+    })
+    describe("Return", () => {
+        it("WithValue", () => {
+            createJsonFromBlock(new $.Return(new $.Identifier("x"))).should.deep.equal({
+                "_type": "Return",
+                "value": { "_type": "Identifier", "id": "x" },
+            })
+        })
+        it("WithoutValue", () => {
+            createJsonFromBlock(new $.Return(null)).should.deep.equal({
+                "_type": "Return",
+                "value": null,
+            })
+        })
+    })
+    it("Break", () => {
+        createJsonFromBlock(new $.Break()).should.deep.equal({ "_type": "Break" })
+    })
+    it("Continue", () => {
+        createJsonFromBlock(new $.Continue()).should.deep.equal({ "_type": "Continue" })
+    })
+    it("Suite", () => {
+        createJsonFromBlock(new $.Suite([new $.Break])).should.deep.equal({
+            "_type": "Suite",
+            "stmts": [{ "_type": "Break" }],
+        })
     })
 })
