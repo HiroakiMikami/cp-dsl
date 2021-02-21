@@ -1,13 +1,6 @@
+import { LibInfo } from "./libinfo";
 import { Assign, Block, Branch, Break, Call, Case, Continue, Create, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
 import { indent } from "./util";
-
-export interface LibInfo {
-    typevarNames: ReadonlyMap<string, ReadonlyArray<string>>
-    createArgNames: ReadonlyMap<string, ReadonlyArray<string>>
-    argNames: ReadonlyMap<string, ReadonlyArray<string>>
-    includes: ReadonlySet<string>
-    lib: string
-}
 
 export class Transpiler {
     constructor(
