@@ -6,6 +6,7 @@ export type LibInfo = L.LibInfo
 export const createJsonFromLibInfo = L.createJsonFromLibInfo
 export const createLibInfoFromJson = L.createLibInfoFromJson
 
+export type Block = S.Block
 export const Blocks = S
 export const createJsonFromBlock = S.createJsonFromBlock
 export const createBlockFromJson = S.createBlockFromJson
