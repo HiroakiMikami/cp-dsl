@@ -1,5 +1,5 @@
-import { fromJson as _fromJson } from "./json";
+import { createBlockFromJson as _createBlockFromJson } from "./syntax";
 import { Transpiler as _Transpiler } from "./transpile";
 
-export const fromJson = _fromJson
+export const createBlockFromJson = _createBlockFromJson
 export const Transpiler = _Transpiler

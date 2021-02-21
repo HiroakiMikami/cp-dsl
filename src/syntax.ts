@@ -160,3 +160,110 @@ export class Suite implements Block {
     toString(): string { return `${this.stmts.join("")}` }
 }
 export type Statement = Assign | Do | Loop | Branch | Return | Break | Continue | Suite
+
+export function createBlockFromJson(value: any): Block | null {
+    if (!value) {
+        return null
+    }
+    const t = value["_type"]
+    switch (t) {
+        case "TypeIdentifier":
+            return new TypeIdentifier(value["id"])
+        case "PolymorphicType":
+            return (() => {
+                const typevars = new Map()
+                const typevarsJson = value["typevars"]
+                for (const key in typevarsJson) {
+                    const value = createBlockFromJson(typevarsJson[key])
+                    typevars.set(key, value)
+                }
+                return new PolymorphicType(
+                    createBlockFromJson(value["id"]) as TypeIdentifier,
+                    typevars,
+                )
+            })()
+        case "Num":
+            return new Num(value["value"], value["isFloat"])
+        case "Str":
+            return new Str(value["value"])
+        case "Identifier":
+            return new Identifier(value["id"])
+        case "Declaration":
+            return new Declaration(
+                createBlockFromJson(value["arg"]) as Identifier,
+                createBlockFromJson(value["type"]) as Type,
+            )
+        case "Func":
+            return new Func(
+                value["decls"].map(createBlockFromJson),
+                createBlockFromJson(value["returnType"]) as Type,
+                createBlockFromJson(value["body"]) as Statement,
+            )
+        case "Create":
+            return (() => {
+                const args = new Map()
+                const argsJson = value["args"]
+                for (const key in argsJson) {
+                    const value = createBlockFromJson(argsJson[key])
+                    args.set(key, value)
+                }
+                return new Create(
+                    createBlockFromJson(value["type"]) as Type,
+                    args,
+                )
+            })()
+        case "Call":
+            return (() => {
+                const args = new Map()
+                const argsJson = value["args"]
+                for (const key in argsJson) {
+                    const value = createBlockFromJson(argsJson[key])
+                    args.set(key, value)
+                }
+                return new Call(
+                    createBlockFromJson(value["func"]) as Identifier,
+                    args,
+                )
+            })()
+
+        case "Assign":
+            return new Assign(
+                createBlockFromJson(value["lhs"]) as Identifier,
+                value["isDefine"],
+                createBlockFromJson(value["rhs"]) as Expression,
+            )
+        case "Do":
+            return new Do(createBlockFromJson(value["expr"]) as Expression)
+        case "Loop":
+            return new Loop(
+                createBlockFromJson(value["id"]) as Identifier,
+                createBlockFromJson(value["iterable"]) as Expression,
+                createBlockFromJson(value["body"]) as Statement,
+            )
+        case "Branch":
+            return new Branch(
+                value["cases"].map(createBlockFromJson),
+                createBlockFromJson(value["default"]) as (Default | null),
+            )
+        case "Case":
+            return new Case(
+                createBlockFromJson(value["cond"]) as Expression,
+                createBlockFromJson(value["body"]) as Statement,
+            )
+        case "Default":
+            return new Default(createBlockFromJson(value["body"]) as Statement)
+        case "Return":
+            return new Return(createBlockFromJson(value["value"]) as Expression)
+        case "Break":
+            return new Break()
+        case "Continue":
+            return new Continue()
+        case "Suite":
+            const stmts = value["stmts"].map(createBlockFromJson)
+            return new Suite(stmts)
+
+        default:
+            break;
+    }
+    throw new Error(`Invalid JSON: ${JSON.stringify(value)}`)
+}
