@@ -234,7 +234,7 @@ describe("transpile", () => {
         it("define function", () => {
             transpiler.transpile(
                 new $.Assign(
-                    new $.Identifier("f"),
+                    new $.Identifier("z"),
                     true,
                     new $.Func(
                         [
@@ -249,22 +249,22 @@ describe("transpile", () => {
                         ],
                         new $.TypeIdentifier("void"),
                         new $.Do(new $.Call(
-                            new $.Identifier("f"),
+                            new $.Identifier("z"),
                             [
-                                new $.Argument(new $.Identifier("a0"), new $.Identifier("n")),
-                                new $.Argument(new $.Identifier("a1"), new $.Identifier("m")),
+                                new $.Argument(new $.Identifier("n"), new $.Identifier("n")),
+                                new $.Argument(new $.Identifier("m"), new $.Identifier("m")),
                             ],
                         )),
                     )
                 )
-            ).should.equal(`auto _f = [&](Integer &n, Float &m, auto _f) -> void {
-  auto f = [&](Integer &n, Float &m) -> void {
-    return _f(n, m, _f);
+            ).should.equal(`auto _z = [&](Integer &n, Float &m, auto _z) -> void {
+  auto z = [&](Integer &n, Float &m) -> void {
+    return _z(n, m, _z);
   };
-  (f(n, m));
+  (z(n, m));
 };
-auto f = [&](Integer &n, Float &m) -> void {
-  return _f(n, m, _f);
+auto z = [&](Integer &n, Float &m) -> void {
+  return _z(n, m, _z);
 };
 `)
         })
@@ -361,5 +361,53 @@ else {
         transpiler.transpile(
             new $.Suite([new $.Break, new $.Continue])
         ).should.equal("break;\ncontinue;\n")
+    })
+    it("use defined function", () => {
+        transpiler.transpile(
+            new $.Suite([
+                new $.Assign(
+                    new $.Identifier("z"),
+                    true,
+                    new $.Func(
+                        [
+                            new $.Declaration(
+                                new $.Identifier("n"),
+                                new $.TypeIdentifier("Integer")
+                            ),
+                            new $.Declaration(
+                                new $.Identifier("m"),
+                                new $.TypeIdentifier("Float")
+                            ),
+                        ],
+                        new $.TypeIdentifier("void"),
+                        new $.Do(new $.Call(
+                            new $.Identifier("z"),
+                            [
+                                new $.Argument(new $.Identifier("n"), new $.Identifier("n")),
+                                new $.Argument(new $.Identifier("m"), new $.Identifier("m")),
+                            ],
+                        )),
+                    )
+                ),
+                new $.Do(new $.Call(
+                    new $.Identifier("z"),
+                    [
+                        new $.Argument(new $.Identifier("m"), new $.Identifier("x")),
+                        new $.Argument(new $.Identifier("n"), new $.Identifier("y")),
+                    ]
+                ))
+            ])
+        ).should.equal(`auto _z = [&](Integer &n, Float &m, auto _z) -> void {
+  auto z = [&](Integer &n, Float &m) -> void {
+    return _z(n, m, _z);
+  };
+  (z(n, m));
+};
+auto z = [&](Integer &n, Float &m) -> void {
+  return _z(n, m, _z);
+};
+(z(y, x));
+`);
+        (transpiler as any).info.argNames.size.should.equal(1)
     })
 })
