@@ -58,19 +58,17 @@ describe("transpile", () => {
         it("success", () => {
             transpiler.transpile(new $.PolymorphicType(
                 new $.TypeIdentifier("Map"),
-                new Map([
-                    ["K", new $.TypeIdentifier("Integer")],
-                    ["V", new $.TypeIdentifier("String")]
-                ]),
+                [
+                    new $.TypeArgument("K", new $.TypeIdentifier("Integer")),
+                    new $.TypeArgument("V", new $.TypeIdentifier("String")),
+                ],
             )).should.equal("Map<Integer, String>")
         })
         it("unknown type", () => {
             const f = () => {
                 transpiler.transpile(new $.PolymorphicType(
                     new $.TypeIdentifier("Set"),
-                    new Map([
-                        ["V", new $.TypeIdentifier("String")]
-                    ]),
+                    [new $.TypeArgument("V", new $.TypeIdentifier("String"))],
                 ))
             }
             f.should.throw("Unknown type: Set")
@@ -79,9 +77,7 @@ describe("transpile", () => {
             const f = () => {
                 transpiler.transpile(new $.PolymorphicType(
                     new $.TypeIdentifier("Map"),
-                    new Map([
-                        ["V", new $.TypeIdentifier("String")]
-                    ]),
+                    [new $.TypeArgument("V", new $.TypeIdentifier("String"))],
                 ))
             }
             f.should.throw("Typevar K is not specified in #Map<V=#String>")
@@ -131,7 +127,7 @@ describe("transpile", () => {
             transpiler.transpile(
                 new $.Create(
                     new $.TypeIdentifier("Integer"),
-                    new Map([["n", new $.Identifier("x")]]),
+                    [new $.Argument(new $.Identifier("n"), new $.Identifier("x"))],
                 )
             ).should.equal("(Integer{x})")
         })
@@ -140,9 +136,12 @@ describe("transpile", () => {
                 new $.Create(
                     new $.PolymorphicType(
                         new $.TypeIdentifier("Array"),
-                        new Map([["V", new $.TypeIdentifier("Integer")]]),
+                        [new $.TypeArgument("V", new $.TypeIdentifier("Integer"))],
                     ),
-                    new Map([["capacity", new $.Identifier("y")], ["size", new $.Identifier("x")]]),
+                    [
+                        new $.Argument(new $.Identifier("capacity"), new $.Identifier("y")),
+                        new $.Argument(new $.Identifier("size"), new $.Identifier("x"))
+                    ],
                 )
             ).should.equal("(Array<Integer>{x, y})")
         })
@@ -151,10 +150,10 @@ describe("transpile", () => {
                 transpiler.transpile(
                     new $.Create(
                         new $.TypeIdentifier("g"),
-                        new Map([
-                            ["a0", new $.Identifier("x")],
-                            ["a1", new $.Identifier("y")],
-                        ]),
+                        [
+                            new $.Argument(new $.Identifier("a0"), new $.Identifier("x")),
+                            new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
+                        ],
                     )
                 )
             }
@@ -165,7 +164,7 @@ describe("transpile", () => {
                 transpiler.transpile(
                     new $.Create(
                         new $.TypeIdentifier("Integer"),
-                        new Map([]),
+                        [],
                     )
                 )
             }
@@ -177,10 +176,10 @@ describe("transpile", () => {
             transpiler.transpile(
                 new $.Call(
                     new $.Identifier("f"),
-                    new Map([
-                        ["a0", new $.Identifier("x")],
-                        ["a1", new $.Identifier("y")],
-                    ]),
+                    [
+                        new $.Argument(new $.Identifier("a0"), new $.Identifier("x")),
+                        new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
+                    ],
                 )
             ).should.equal("(f(x, y))")
         })
@@ -189,10 +188,10 @@ describe("transpile", () => {
                 transpiler.transpile(
                     new $.Call(
                         new $.Identifier("g"),
-                        new Map([
-                            ["a0", new $.Identifier("x")],
-                            ["a1", new $.Identifier("y")],
-                        ]),
+                        [
+                            new $.Argument(new $.Identifier("a0"), new $.Identifier("x")),
+                            new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
+                        ],
                     )
                 )
             }
@@ -203,13 +202,13 @@ describe("transpile", () => {
                 transpiler.transpile(
                     new $.Call(
                         new $.Identifier("f"),
-                        new Map([
-                            ["a1", new $.Identifier("y")],
-                        ]),
+                        [
+                            new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
+                        ],
                     )
                 )
             }
-            f.should.throw("Argument a0 is not specified in ($f(a1=$y))")
+            f.should.throw("Argument a0 is not specified in ($f($a1=$y))")
         })
     })
 
@@ -251,10 +250,10 @@ describe("transpile", () => {
                         new $.TypeIdentifier("void"),
                         new $.Do(new $.Call(
                             new $.Identifier("f"),
-                            new Map([
-                                ["a0", new $.Identifier("n")],
-                                ["a1", new $.Identifier("m")],
-                            ]),
+                            [
+                                new $.Argument(new $.Identifier("a0"), new $.Identifier("n")),
+                                new $.Argument(new $.Identifier("a1"), new $.Identifier("m")),
+                            ],
                         )),
                     )
                 )

@@ -8,13 +8,19 @@ export class TypeIdentifier implements Block {
     constructor(public readonly id: string) { }
     toString(): string { return `#${this.id}` }
 }
+export class TypeArgument implements Block {
+    constructor(public readonly name: string, public readonly type: Type) {}
+    toString(): string {
+        return `${this.name}=${this.type}`
+    }
+}
 export class PolymorphicType implements Block {
     constructor(
         public readonly id: TypeIdentifier,
-        public readonly typevars: ReadonlyMap<string, Type>,
+        public readonly typevars: ReadonlyArray<TypeArgument>,
     ) { }
     toString(): string {
-        return `${this.id}<${Array.from(this.typevars).map(x => `${x[0]}=${x[1]}`).join(",")}>`
+        return `${this.id}<${this.typevars.join(",")}>`
     }
 }
 export type Type = TypeIdentifier | PolymorphicType
@@ -58,19 +64,28 @@ ${indent(this.body.toString())}
 }`
     }
 }
+export class Argument implements Block {
+    constructor(
+        public readonly name: Identifier,
+        public readonly value: Expression,
+    ) {}
+    toString(): string {
+        return `${this.name}=${this.value}`
+    }
+}
 export class Create implements Block {
     constructor(
         public readonly type: Type,
-        public readonly args: ReadonlyMap<string, Expression>,
+        public readonly args: ReadonlyArray<Argument>,
     ) { }
-    toString(): string { return `(${this.type}(${Array.from(this.args).map(x => `${x[0]}=${x[1]}`).join(",")}))` }
+    toString(): string { return `(${this.type}(${this.args.join(",")}))` }
 }
 export class Call implements Block {
     constructor(
         public readonly func: Identifier,
-        public readonly args: ReadonlyMap<string, Expression>,
+        public readonly args: ReadonlyArray<Argument>,
     ) { }
-    toString(): string { return `(${this.func}(${Array.from(this.args).map(x => `${x[0]}=${x[1]}`).join(",")}))` }
+    toString(): string { return `(${this.func}(${this.args.join(",")}))` }
 }
 export type Expression = Primitive | Identifier | Func | Create | Call
 
@@ -170,19 +185,16 @@ export function createBlockFromJson(value: any): Block | null {
     switch (t) {
         case "TypeIdentifier":
             return new TypeIdentifier(value["id"])
+        case "TypeArgument":
+            return new TypeArgument(
+                value["name"],
+                createBlockFromJson(value["type"]) as Type,
+            )
         case "PolymorphicType":
-            return (() => {
-                const typevars = new Map()
-                const typevarsJson = value["typevars"]
-                for (const key in typevarsJson) {
-                    const value = createBlockFromJson(typevarsJson[key])
-                    typevars.set(key, value)
-                }
-                return new PolymorphicType(
-                    createBlockFromJson(value["id"]) as TypeIdentifier,
-                    typevars,
-                )
-            })()
+            return new PolymorphicType(
+                createBlockFromJson(value["id"]) as TypeIdentifier,
+                value["typevars"].map(createBlockFromJson),
+            )
         case "Num":
             return new Num(value["value"], value["isFloat"])
         case "Str":
@@ -200,32 +212,21 @@ export function createBlockFromJson(value: any): Block | null {
                 createBlockFromJson(value["returnType"]) as Type,
                 createBlockFromJson(value["body"]) as Statement,
             )
+        case "Argument":
+            return new Argument(
+                createBlockFromJson(value["name"]) as Identifier,
+                createBlockFromJson(value["value"]) as Expression,
+            )
         case "Create":
-            return (() => {
-                const args = new Map()
-                const argsJson = value["args"]
-                for (const key in argsJson) {
-                    const value = createBlockFromJson(argsJson[key])
-                    args.set(key, value)
-                }
-                return new Create(
-                    createBlockFromJson(value["type"]) as Type,
-                    args,
-                )
-            })()
+            return new Create(
+                createBlockFromJson(value["type"]) as Type,
+                value["args"].map(createBlockFromJson),
+            )
         case "Call":
-            return (() => {
-                const args = new Map()
-                const argsJson = value["args"]
-                for (const key in argsJson) {
-                    const value = createBlockFromJson(argsJson[key])
-                    args.set(key, value)
-                }
-                return new Call(
-                    createBlockFromJson(value["func"]) as Identifier,
-                    args,
-                )
-            })()
+            return new Call(
+                createBlockFromJson(value["func"]) as Identifier,
+                value["args"].map(createBlockFromJson),
+            )
 
         case "Assign":
             return new Assign(
@@ -279,17 +280,18 @@ export function createJsonFromBlock(block: Block | null): any | null {
             "_type": "TypeIdentifier",
             "id": block.id,
         }
+    } else if (block instanceof TypeArgument) {
+        return {
+            "_type": "TypeArgument",
+            "name": block.name,
+            "type": createJsonFromBlock(block.type),
+        }
     } else if (block instanceof PolymorphicType) {
-        let out: any = {
+        return {
             "_type": "PolymorphicType",
             "id": createJsonFromBlock(block.id),
+            "typevars": block.typevars.map(createJsonFromBlock),
         }
-        let tvars: any = {}
-        block.typevars.forEach((value, key) => {
-            tvars[key] = createJsonFromBlock(value)
-        })
-        out["typevars"] = tvars
-        return out
     } else if (block instanceof Num) {
         return {
             "_type": "Num",
@@ -319,28 +321,24 @@ export function createJsonFromBlock(block: Block | null): any | null {
             "returnType": createJsonFromBlock(block.returnType),
             "body": createJsonFromBlock(block.body),
         }
+    } else if (block instanceof Argument) {
+        return {
+            "_type": "Argument",
+            "name": createJsonFromBlock(block.name),
+            "value": createJsonFromBlock(block.value),
+        }
     } else if (block instanceof Create) {
-        let out: any = {
+        return {
             "_type": "Create",
-            "type": createJsonFromBlock(block.type)
+            "type": createJsonFromBlock(block.type),
+            "args": block.args.map(createJsonFromBlock),
         }
-        let args: any = {}
-        block.args.forEach((value, key) => {
-            args[key] = createJsonFromBlock(value)
-        })
-        out["args"] = args
-        return out
     } else if (block instanceof Call) {
-        let out: any = {
+        return {
             "_type": "Call",
-            "func": createJsonFromBlock(block.func)
+            "func": createJsonFromBlock(block.func),
+            "args": block.args.map(createJsonFromBlock),
         }
-        let args: any = {}
-        block.args.forEach((value, key) => {
-            args[key] = createJsonFromBlock(value)
-        })
-        out["args"] = args
-        return out
     } else if (block instanceof Assign) {
         return {
             "_type": "Assign",

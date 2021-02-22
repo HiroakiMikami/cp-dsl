@@ -21,12 +21,16 @@ export class Transpiler {
             if (!this.info.typevarNames.has(block.id.id)) {
                 throw `Unknown type: ${block.id.id}`
             }
+            const tvarMaps = new Map()
+            for (const arg of block.typevars) {
+                tvarMaps.set(arg.name, arg.type)
+            }
             const tvars = []
             for (const name of this.info.typevarNames.get(block.id.id)) {
-                if (!block.typevars.has(name)) {
+                if (!tvarMaps.has(name)) {
                     throw `Typevar ${name} is not specified in ${block}`
                 }
-                tvars.push(this.transpile(block.typevars.get(name)))
+                tvars.push(this.transpile(tvarMaps.get(name)))
             }
             return `${this.transpile(block.id)}<${tvars.join(", ")}>`
         } else if (block instanceof Num) {
@@ -57,24 +61,32 @@ ${indent(this.transpile(block.body))}
             if (!this.info.createArgNames.has(type)) {
                 throw `Unknown type: ${type}`
             }
+            const argMap = new Map()
+            for (const arg of block.args) {
+                argMap.set(arg.name.id, arg.value)
+            }
             const args = []
             for (const name of this.info.createArgNames.get(type)) {
-                if (!block.args.has(name)) {
+                if (!argMap.has(name)) {
                     throw `Argument ${name} is not specified in ${block}`
                 }
-                args.push(this.transpile(block.args.get(name)))
+                args.push(this.transpile(argMap.get(name)))
             }
             return `(${this.transpile(block.type)}{${args.join(", ")}})`
         } else if (block instanceof Call) {
             if (!this.info.argNames.has(block.func.id)) {
                 throw `Unknown function: ${block.func.id}`
             }
+            const argMap = new Map()
+            for (const arg of block.args) {
+                argMap.set(arg.name.id, arg.value)
+            }
             const args = []
             for (const name of this.info.argNames.get(block.func.id)) {
-                if (!block.args.has(name)) {
+                if (!argMap.has(name)) {
                     throw `Argument ${name} is not specified in ${block}`
                 }
-                args.push(this.transpile(block.args.get(name)))
+                args.push(this.transpile(argMap.get(name)))
             }
             return `(${this.transpile(block.func)}(${args.join(", ")}))`
         } else if (block instanceof Assign) {

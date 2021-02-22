@@ -2,20 +2,25 @@ import * as chai from 'chai'
 const should = chai.should()
 
 import * as $ from "../src/syntax"
-import {createBlockFromJson, createJsonFromBlock} from "../src/index"
+import { createBlockFromJson, createJsonFromBlock } from "../src/index"
 
 describe("toString", () => {
     it("TypeIdentifier", () => {
         new $.TypeIdentifier("int").toString().should.equal("#int")
     })
-    it("PolymorphicType", () => {
-        new $.PolymorphicType(
-            new $.TypeIdentifier("map"),
-            new Map([
-                ["V", new $.TypeIdentifier("int")],
-                ["K", new $.TypeIdentifier("string")]
-            ]),
-        ).toString().should.deep.equal("#map<V=#int,K=#string>")
+    describe("PolymorphicType", () => {
+        it("TypeArgument", () => {
+            new $.TypeArgument("V", new $.TypeIdentifier("int")).toString().should.deep.equal("V=#int")
+        })
+        it("PolymorphicType", () => {
+            new $.PolymorphicType(
+                new $.TypeIdentifier("map"),
+                [
+                    new $.TypeArgument("V", new $.TypeIdentifier("int")),
+                    new $.TypeArgument("K", new $.TypeIdentifier("string")),
+                ]
+            ).toString().should.deep.equal("#map<V=#int,K=#string>")
+        })
     })
 
     describe("Num", () => {
@@ -57,23 +62,26 @@ describe("toString", () => {
             )
         })
     })
+    it("Argument", () => {
+        new $.Argument(new $.Identifier("a0"), new $.Identifier("x")).toString().should.deep.equal("$a0=$x")
+    })
     it("Create", () => {
         new $.Create(
             new $.TypeIdentifier("V"),
-            new Map([
-                ["a0", new $.Identifier("x")],
-                ["a1", new $.Identifier("y")],
-            ]),
-        ).toString().should.deep.equal("(#V(a0=$x,a1=$y))")
+            [
+                new $.Argument(new $.Identifier("a0"), new $.Identifier("x")),
+                new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
+            ],
+        ).toString().should.deep.equal("(#V($a0=$x,$a1=$y))")
     })
     it("Call", () => {
         new $.Call(
             new $.Identifier("f"),
-            new Map([
-                ["a0", new $.Identifier("x")],
-                ["a1", new $.Identifier("y")],
-            ]),
-        ).toString().should.deep.equal("($f(a0=$x,a1=$y))")
+            [
+                new $.Argument(new $.Identifier("a0"), new $.Identifier("x")),
+                new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
+            ],
+        ).toString().should.deep.equal("($f($a0=$x,$a1=$y))")
     })
 
     describe("Assign", () => {
@@ -165,12 +173,16 @@ describe("createBlockFromJson", () => {
         createBlockFromJson({
             "_type": "PolymorphicType",
             "id": { "_type": "TypeIdentifier", "id": "x" },
-            "typevars": {
-                "Y": { "_type": "TypeIdentifier", "id": "y" }
-            },
+            "typevars": [
+                {
+                    "_type": "TypeArgument",
+                    "name": "Y",
+                    "type": { "_type": "TypeIdentifier", "id": "y" }
+                },
+            ]
         }).should.deep.equal(new $.PolymorphicType(
             new $.TypeIdentifier("x"),
-            new Map([["Y", new $.TypeIdentifier("y")]]),
+            [new $.TypeArgument("Y", new $.TypeIdentifier("y"))],
         ))
     })
 
@@ -224,16 +236,30 @@ describe("createBlockFromJson", () => {
             )
         })
     })
+    it("Argument", () => {
+        createBlockFromJson({
+            "_type": "Argument",
+            "name": { "_type": "Identifier", "id": "x" },
+            "value": { "_type": "Identifier", "id": "y" },
+        }).should.deep.equal(
+            new $.Argument(new $.Identifier("x"), new $.Identifier("y"))
+        )
+    })
     it("Create", () => {
         createBlockFromJson({
             "_type": "Create",
             "type": { "_type": "TypeIdentifier", "id": "V" },
-            "args": {
-                "a": { "_type": "Identifier", "id": "x" },
-            },
+            "args": [
+                {
+                    "_type": "Argument",
+                    "name": { "_type": "Identifier", "id": "a" },
+                    "value": { "_type": "Identifier", "id": "x" },
+                }
+            ],
         }).should.deep.equal(
             new $.Create(
-                new $.TypeIdentifier("V"), new Map([["a", new $.Identifier("x")]])
+                new $.TypeIdentifier("V"),
+                [new $.Argument(new $.Identifier("a"), new $.Identifier("x"))],
             )
         )
     })
@@ -241,12 +267,17 @@ describe("createBlockFromJson", () => {
         createBlockFromJson({
             "_type": "Call",
             "func": { "_type": "Identifier", "id": "f" },
-            "args": {
-                "a": { "_type": "Identifier", "id": "x" },
-            },
+            "args": [
+                {
+                    "_type": "Argument",
+                    "name": { "_type": "Identifier", "id": "a" },
+                    "value": { "_type": "Identifier", "id": "x" },
+                }
+            ],
         }).should.deep.equal(
             new $.Call(
-                new $.Identifier("f"), new Map([["a", new $.Identifier("x")]])
+                new $.Identifier("f"),
+                [new $.Argument(new $.Identifier("a"), new $.Identifier("x"))],
             )
         )
     })
@@ -402,13 +433,17 @@ describe("createJsonFromBlock", () => {
     it("PolymorphicType", () => {
         createJsonFromBlock(new $.PolymorphicType(
             new $.TypeIdentifier("x"),
-            new Map([["Y", new $.TypeIdentifier("y")]]),
+            [new $.TypeArgument("Y", new $.TypeIdentifier("y"))],
         )).should.deep.equal({
             "_type": "PolymorphicType",
             "id": { "_type": "TypeIdentifier", "id": "x" },
-            "typevars": {
-                "Y": { "_type": "TypeIdentifier", "id": "y" }
-            },
+            "typevars": [
+                {
+                    "_type": "TypeArgument",
+                    "name": "Y",
+                    "type": { "_type": "TypeIdentifier", "id": "y" },
+                },
+            ],
         })
     })
 
@@ -462,30 +497,45 @@ describe("createJsonFromBlock", () => {
             })
         })
     })
+    it("Argument", () => {
+        createJsonFromBlock(new $.Argument(new $.Identifier("x"), new $.Identifier("y"))).should.deep.equal({
+            "_type": "Argument",
+            "name": { "_type": "Identifier", "id": "x" },
+            "value": { "_type": "Identifier", "id": "y" },
+        })
+    })
     it("Create", () => {
         createJsonFromBlock(
             new $.Create(
-                new $.TypeIdentifier("V"), new Map([["a", new $.Identifier("x")]])
+                new $.TypeIdentifier("V"), [new $.Argument(new $.Identifier("a"), new $.Identifier("x"))]
             )
         ).should.deep.equal({
             "_type": "Create",
             "type": { "_type": "TypeIdentifier", "id": "V" },
-            "args": {
-                "a": { "_type": "Identifier", "id": "x" },
-            },
+            "args": [
+                {
+                    "_type": "Argument",
+                    "name": { "_type": "Identifier", "id": "a" },
+                    "value": { "_type": "Identifier", "id": "x" },
+                },
+            ],
         })
     })
     it("Call", () => {
         createJsonFromBlock(
             new $.Call(
-                new $.Identifier("f"), new Map([["a", new $.Identifier("x")]])
+                new $.Identifier("f"), [new $.Argument(new $.Identifier("a"), new $.Identifier("x"))]
             )
         ).should.deep.equal({
             "_type": "Call",
             "func": { "_type": "Identifier", "id": "f" },
-            "args": {
-                "a": { "_type": "Identifier", "id": "x" },
-            },
+            "args": [
+                {
+                    "_type": "Argument",
+                    "name": { "_type": "Identifier", "id": "a" },
+                    "value": { "_type": "Identifier", "id": "x" },
+                },
+            ],
         })
     })
 
