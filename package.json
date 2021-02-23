@@ -5,6 +5,7 @@
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "scripts": {
+    "prepare": "npm run compile",
     "compile": "$(npm bin)/tsc -p ./",
     "doc": "$(npm bin)/typedoc --out doc ./src/",
     "check-format": "$(npm bin)/eslint $(find ./src -name '*.ts') $(find ./test -name '*.ts')",
