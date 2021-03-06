@@ -280,8 +280,9 @@ auto z = [&](Integer &n, Float &m) -> void {
                 new $.Identifier("x"), new $.Identifier("xs"),
                 new $.Do(new $.Identifier("z")),
             )
-        ).should.equal(`foreach(xs, [&](auto &x) -> void {
+        ).should.equal(`foreach(xs, [&](auto &x) -> bool {
   z;
+  return false; // continue loop
 });
 `)
     })
@@ -352,15 +353,15 @@ else {
         })
     })
     it("Break", () => {
-        transpiler.transpile(new $.Break()).should.equal("break;\n")
+        transpiler.transpile(new $.Break()).should.equal("return true; // break loop\n")
     })
     it("Continue", () => {
-        transpiler.transpile(new $.Continue()).should.equal("continue;\n")
+        transpiler.transpile(new $.Continue()).should.equal("return false; // continue loop\n")
     })
     it("Suite", () => {
         transpiler.transpile(
             new $.Suite([new $.Break, new $.Continue])
-        ).should.equal("break;\ncontinue;\n")
+        ).should.equal("return true; // break loop\nreturn false; // continue loop\n")
     })
     it("use defined function", () => {
         transpiler.transpile(

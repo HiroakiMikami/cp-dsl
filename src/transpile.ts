@@ -133,8 +133,9 @@ auto ${f} = [&](${decls.join(", ")}) -> ${retType} {
             } else if (block instanceof Do) {
                 return `${_transpile(block.expr)};\n`
             } else if (block instanceof Loop) {
-                return `foreach(${_transpile(block.iterable)}, [&](auto &${_transpile(block.id)}) -> void {
+                return `foreach(${_transpile(block.iterable)}, [&](auto &${_transpile(block.id)}) -> bool {
 ${indent(_transpile(block.body))}
+  return false; // continue loop
 });
 `
             } else if (block instanceof Branch) {
@@ -162,9 +163,9 @@ ${indent(_transpile(block.body))}
                     return "return;\n"
                 }
             } else if (block instanceof Break) {
-                return "break;\n"
+                return "return true; // break loop\n"
             } else if (block instanceof Continue) {
-                return "continue;\n"
+                return "return false; // continue loop\n"
             } else if (block instanceof Suite) {
                 return block.stmts.map(x => _transpile(x)).join("")
             }
