@@ -9,7 +9,7 @@ export class TypeIdentifier implements Block {
     toString(): string { return `#${this.id}` }
 }
 export class TypeArgument implements Block {
-    constructor(public readonly name: string, public readonly type: Type) {}
+    constructor(public readonly name: string, public readonly type: Type) { }
     toString(): string {
         return `${this.name}=${this.type}`
     }
@@ -68,7 +68,7 @@ export class Argument implements Block {
     constructor(
         public readonly name: Identifier,
         public readonly value: Expression,
-    ) {}
+    ) { }
     toString(): string {
         return `${this.name}=${this.value}`
     }
@@ -107,7 +107,20 @@ export class Do implements Block {
     constructor(public readonly expr: Expression) { }
     toString(): string { return `do(${this.expr})\n` }
 }
-export class Loop implements Block {
+export class While implements Block {
+    constructor(
+        public readonly cond: Expression,
+        public readonly body: Statement,
+    ) { }
+    toString(): string {
+        return `while(${this.cond}){
+${indent(this.body.toString())}
+}
+`
+    }
+}
+
+export class Foreach implements Block {
     constructor(
         public readonly id: Identifier,
         public readonly iterable: Expression,
@@ -175,7 +188,7 @@ export class Suite implements Block {
     constructor(public readonly stmts: ReadonlyArray<Statement>) { }
     toString(): string { return `${this.stmts.join("")}` }
 }
-export type Statement = Assign | Do | Loop | Branch | Return | Break | Continue | Suite
+export type Statement = Assign | Do | While | Foreach | Branch | Return | Break | Continue | Suite
 
 export function createBlockFromJson(value: any): Block | null {
     if (!value) {
@@ -236,8 +249,13 @@ export function createBlockFromJson(value: any): Block | null {
             )
         case "Do":
             return new Do(createBlockFromJson(value["expr"]) as Expression)
-        case "Loop":
-            return new Loop(
+        case "While":
+            return new While(
+                createBlockFromJson(value["cond"]) as Expression,
+                createBlockFromJson(value["body"]) as Statement,
+            )
+        case "Foreach":
+            return new Foreach(
                 createBlockFromJson(value["id"]) as Identifier,
                 createBlockFromJson(value["iterable"]) as Expression,
                 createBlockFromJson(value["body"]) as Statement,
@@ -347,13 +365,19 @@ export function createJsonFromBlock(block: Block | null): any | null {
             "rhs": createJsonFromBlock(block.rhs),
         }
     } else if (block instanceof Do) {
-        return{
+        return {
             "_type": "Do",
             "expr": createJsonFromBlock(block.expr)
         }
-    } else if (block instanceof Loop) {
+    } else if (block instanceof While) {
         return {
-            "_type": "Loop",
+            "_type": "While",
+            "cond": createJsonFromBlock(block.cond),
+            "body": createJsonFromBlock(block.body),
+        }
+    } else if (block instanceof Foreach) {
+        return {
+            "_type": "Foreach",
             "id": createJsonFromBlock(block.id),
             "iterable": createJsonFromBlock(block.iterable),
             "body": createJsonFromBlock(block.body),

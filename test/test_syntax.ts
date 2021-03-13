@@ -99,8 +99,14 @@ describe("toString", () => {
     it("Do", () => {
         new $.Do(new $.Identifier("x")).toString().should.deep.equal("do($x)\n")
     })
-    it("Loop", () => {
-        new $.Loop(
+    it("While", () => {
+        new $.While(
+            new $.Identifier("x"),
+            new $.Do(new $.Identifier("z")),
+        ).toString().should.deep.equal("while($x){\n  do($z)\n}\n")
+    })
+    it("Foreach", () => {
+        new $.Foreach(
             new $.Identifier("x"), new $.Identifier("xs"),
             new $.Do(new $.Identifier("z")),
         ).toString().should.deep.equal("foreach($x<-$xs){\n  do($z)\n}\n")
@@ -302,9 +308,24 @@ describe("createBlockFromJson", () => {
             new $.Do(new $.Identifier("x"))
         )
     })
-    it("Loop", () => {
+    it("While", () => {
         createBlockFromJson({
-            "_type": "Loop",
+            "_type": "While",
+            "cond": { "_type": "Identifier", "id": "x" },
+            "body": {
+                "_type": "Do",
+                "expr": { "_type": "Identifier", "id": "z" },
+            }
+        }).should.deep.equal(
+            new $.While(
+                new $.Identifier("x"),
+                new $.Do(new $.Identifier("z")),
+            )
+        )
+    })
+    it("Foreach", () => {
+        createBlockFromJson({
+            "_type": "Foreach",
             "id": { "_type": "Identifier", "id": "x" },
             "iterable": { "_type": "Identifier", "id": "xs" },
             "body": {
@@ -312,7 +333,7 @@ describe("createBlockFromJson", () => {
                 "expr": { "_type": "Identifier", "id": "z" },
             }
         }).should.deep.equal(
-            new $.Loop(
+            new $.Foreach(
                 new $.Identifier("x"), new $.Identifier("xs"),
                 new $.Do(new $.Identifier("z")),
             )
@@ -557,14 +578,29 @@ describe("createJsonFromBlock", () => {
             "expr": { "_type": "Identifier", "id": "x" },
         })
     })
-    it("Loop", () => {
+    it("While", () => {
         createJsonFromBlock(
-            new $.Loop(
+            new $.While(
+                new $.Identifier("x"),
+                new $.Do(new $.Identifier("z")),
+            )
+        ).should.deep.equal({
+            "_type": "While",
+            "cond": { "_type": "Identifier", "id": "x" },
+            "body": {
+                "_type": "Do",
+                "expr": { "_type": "Identifier", "id": "z" },
+            }
+        })
+    })
+    it("Foreach", () => {
+        createJsonFromBlock(
+            new $.Foreach(
                 new $.Identifier("x"), new $.Identifier("xs"),
                 new $.Do(new $.Identifier("z")),
             )
         ).should.deep.equal({
-            "_type": "Loop",
+            "_type": "Foreach",
             "id": { "_type": "Identifier", "id": "x" },
             "iterable": { "_type": "Identifier", "id": "xs" },
             "body": {

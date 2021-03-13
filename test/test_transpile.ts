@@ -274,9 +274,21 @@ auto z = [&](Integer &n, Float &m) -> void {
             new $.Do(new $.Identifier("x"))
         ).should.equal("x;\n")
     })
-    it("Loop", () => {
+    it("While", () => {
         transpiler.transpile(
-            new $.Loop(
+            new $.While(
+                new $.Identifier("x"),
+                new $.Do(new $.Identifier("z")),
+            )
+        ).should.equal(`_while([&]() -> Bool { return x; }, [&]() -> bool {
+  z;
+  return false; // continue loop
+});
+`)
+    })
+    it("Foreach", () => {
+        transpiler.transpile(
+            new $.Foreach(
                 new $.Identifier("x"), new $.Identifier("xs"),
                 new $.Do(new $.Identifier("z")),
             )

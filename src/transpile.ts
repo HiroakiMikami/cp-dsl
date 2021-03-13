@@ -1,5 +1,5 @@
 import { LibInfo } from "./libinfo";
-import { Assign, Block, Branch, Break, Call, Case, Continue, Create, Declaration, Default, Do, Func, Identifier, Loop, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
+import { Assign, Block, Branch, Break, Call, Case, Continue, Create, Declaration, Default, Do, Func, Identifier, While, Foreach, Num, PolymorphicType, Return, Str, Suite, TypeIdentifier } from "./syntax";
 import { indent } from "./util";
 
 export class Transpiler {
@@ -132,7 +132,13 @@ auto ${f} = [&](${decls.join(", ")}) -> ${retType} {
                 }
             } else if (block instanceof Do) {
                 return `${_transpile(block.expr)};\n`
-            } else if (block instanceof Loop) {
+            } else if (block instanceof While) {
+                return `_while([&]() -> Bool { return ${_transpile(block.cond)}; }, [&]() -> bool {
+${indent(_transpile(block.body))}
+  return false; // continue loop
+});
+`
+            } else if (block instanceof Foreach) {
                 return `foreach(${_transpile(block.iterable)}, [&](auto &${_transpile(block.id)}) -> bool {
 ${indent(_transpile(block.body))}
   return false; // continue loop
