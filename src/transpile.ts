@@ -94,7 +94,13 @@ ${indent(this.transpile(block.body))}
                     }
                     args.push(_transpile(argMap.get(name)))
                 }
-                return `(${_transpile(block.func)}(${args.join(", ")}))`
+                let out = "(([&](){\n"
+                for (let i = 0; i < args.length; ++i) {
+                    out += `  decltype(auto) a${i} = ${args[i]};\n`
+                }
+                out += `  return ${_transpile(block.func)}(${args.map((_, idx) => `a${idx}`).join(", ")});\n`
+                out += "})())"
+                return out
             } else if (block instanceof Assign) {
                 if (block.isDefine) {
                     

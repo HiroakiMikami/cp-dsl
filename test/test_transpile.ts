@@ -181,7 +181,11 @@ describe("transpile", () => {
                         new $.Argument(new $.Identifier("a1"), new $.Identifier("y")),
                     ],
                 )
-            ).should.equal("(f(x, y))")
+            ).should.equal(`(([&](){
+  decltype(auto) a0 = x;
+  decltype(auto) a1 = y;
+  return f(a0, a1);
+})())`)
         })
         it("unknown function", () => {
             const f = () => {
@@ -261,7 +265,11 @@ describe("transpile", () => {
   auto z = [&](Integer &n, Float &m) -> void {
     return _z(n, m, _z);
   };
-  (z(n, m));
+  (([&](){
+  decltype(auto) a0 = n;
+  decltype(auto) a1 = m;
+  return z(a0, a1);
+})());
 };
 auto z = [&](Integer &n, Float &m) -> void {
   return _z(n, m, _z);
@@ -414,12 +422,20 @@ else {
   auto z = [&](Integer &n, Float &m) -> void {
     return _z(n, m, _z);
   };
-  (z(n, m));
+  (([&](){
+  decltype(auto) a0 = n;
+  decltype(auto) a1 = m;
+  return z(a0, a1);
+})());
 };
 auto z = [&](Integer &n, Float &m) -> void {
   return _z(n, m, _z);
 };
-(z(y, x));
+(([&](){
+  decltype(auto) a0 = y;
+  decltype(auto) a1 = x;
+  return z(a0, a1);
+})());
 `);
         (transpiler as any).info.argNames.size.should.equal(1)
     })
